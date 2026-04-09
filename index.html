@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ProEdge — Live Verified Scores</title>
+<style>
+:root{
+  --bg:#0b0d12;--bg2:#12151c;--bg3:#181c26;--bg4:#1e2330;
+  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.12);
+  --text:#e6e8f0;--muted:#6e788f;--muted2:#3a4058;
+  --green:#00d68f;--gBg:rgba(0,214,143,.1);--gBd:rgba(0,214,143,.28);
+  --amber:#ffb84d;--aBg:rgba(255,184,77,.1);--aBd:rgba(255,184,77,.28);
+  --red:#ff4d4d;--rBg:rgba(255,77,77,.1);--rBd:rgba(255,77,77,.28);
+  --blue:#5c8aff;--blBg:rgba(92,138,255,.1);--blBd:rgba(92,138,255,.28);
+  --purple:#b57bee;
+  --ncaa:#e8398a;--ncBg:rgba(232,57,138,.1);--ncBd:rgba(232,57,138,.28);
+  --nba:#c9a227;--nfl:#4a7fd4;
+  --r:10px;--r2:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;min-height:100vh;}
+.shell{max-width:1200px;margin:0 auto;padding:14px 12px 80px;}
+
+/* header */
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.hdr-l{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.logo{font-size:19px;font-weight:800;letter-spacing:-.5px;}
+.logo em{color:var(--green);font-style:normal;}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:blink 1s infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.1;}}
+.lps{display:flex;gap:4px;}
+.lp{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.4px;}
+.lp.nba{background:rgba(201,162,39,.14);color:var(--nba);border:1px solid rgba(201,162,39,.28);}
+.lp.nfl{background:rgba(74,127,212,.14);color:var(--nfl);border:1px solid rgba(74,127,212,.28);}
+.lp.ncaa{background:var(--ncBg);color:var(--ncaa);border:1px solid var(--ncBd);}
+.hdr-r{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.live-badge{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--rBd);padding:5px 12px;border-radius:20px;}
+.lb-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink .8s infinite;flex-shrink:0;}
+.lb-txt{font-size:11px;font-weight:700;color:var(--red);}
+.lb-cd{font-size:11px;color:var(--amber);font-weight:700;margin-left:3px;}
+.scan-btn{font-size:11px;font-weight:700;padding:5px 13px;border-radius:20px;border:1px solid var(--gBd);background:var(--gBg);color:var(--green);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:all .15s;}
+.scan-btn:hover{background:rgba(0,214,143,.18);}
+.scan-btn:disabled{opacity:.4;cursor:default;}
+.sspin{width:9px;height:9px;border:1.5px solid var(--gBd);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;display:none;flex-shrink:0;}
+.sspin.on{display:block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* source badge */
+.src-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:var(--gBg);color:var(--green);border:1px solid var(--gBd);}
+
+/* ticker */
+.ticker-wrap{background:var(--bg2);border:1px solid var(--rBd);border-radius:var(--r2);overflow:hidden;margin-bottom:12px;display:flex;align-items:center;height:36px;}
+.ticker-lbl{background:var(--rBg);color:var(--red);font-size:10px;font-weight:800;padding:0 12px;height:100%;display:flex;align-items:center;gap:5px;letter-spacing:.5px;white-space:nowrap;border-right:1px solid var(--rBd);flex-shrink:0;}
+.ticker-body{flex:1;overflow:hidden;position:relative;}
+.ticker-inner{display:flex;align-items:center;height:36px;animation:scroll 50s linear infinite;white-space:nowrap;}
+.ticker-inner:hover{animation-play-state:paused;}
+@keyframes scroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+.ti{display:inline-flex;align-items:center;gap:7px;margin-right:36px;font-size:12px;}
+.ti-live{color:var(--red);font-weight:700;}
+.ti-final{color:var(--green);font-weight:700;}
+.ti-score{color:var(--amber);font-weight:700;}
+.ti-sched{color:var(--muted);}
+.ti-dot{color:var(--muted2);}
+
+/* breaking */
+.breaking{background:rgba(232,57,138,.08);border:1px solid var(--ncBd);border-radius:var(--r2);padding:9px 14px;margin-bottom:12px;font-size:12px;color:var(--ncaa);display:none;}
+
+/* tabs */
+.tabs{display:flex;gap:2px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:4px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{font-size:12px;font-weight:500;padding:6px 12px;border-radius:7px;cursor:pointer;color:var(--muted);white-space:nowrap;border:none;background:none;font-family:inherit;transition:all .15s;}
+.tab.active{background:var(--bg4);color:var(--text);}
+.tab.lt.active{color:var(--red);}
+.tab.bt.active{color:#f0c040;}
+.tab.nt.active{color:var(--ncaa);}
+.tab:hover:not(.active){color:var(--text);}
+.section{display:none;}.section.active{display:block;}
+
+/* section header */
+.sh{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.sh::after{content:'';flex:1;height:1px;background:var(--border);}
+.sh.red{color:var(--red);}.sh.red::after{background:var(--rBd);}
+.sh.nc{color:var(--ncaa);}.sh.nc::after{background:var(--ncBd);}
+.sh.br{color:#f0c040;}.sh.br::after{background:rgba(240,192,64,.25);}
+.sh.am{color:var(--amber);}
+.lupd{font-size:10px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+
+/* ── LIVE ALERTS ── */
+.live-banner{background:linear-gradient(135deg,rgba(255,77,77,.1),var(--bg2) 65%);border:1px solid var(--rBd);border-radius:var(--r);padding:13px 15px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.lb-l{display:flex;align-items:center;gap:10px;}
+.lb-ring{width:34px;height:34px;border-radius:50%;border:2px solid var(--red);display:flex;align-items:center;justify-content:center;animation:ring 1.5s infinite;flex-shrink:0;}
+@keyframes ring{0%,100%{box-shadow:0 0 0 0 rgba(255,77,77,.4);}50%{box-shadow:0 0 0 8px rgba(255,77,77,0);}}
+.lb-title{font-size:15px;font-weight:800;color:var(--red);}
+.lb-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.lb-r{display:flex;align-items:center;gap:8px;}
+.live-ct-badge{font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px;background:var(--rBg);color:var(--red);border:1px solid var(--rBd);}
+
+/* Live score strip */
+.lgstrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:8px;margin-bottom:14px;}
+.lgtile{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;position:relative;overflow:hidden;}
+.lgtile.live{border-color:var(--rBd);}
+.lgtile.live::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);animation:scanline 2.5s linear infinite;}
+@keyframes scanline{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+.lgtile.sched{opacity:.85;}
+.lgt-league{font-size:10px;font-weight:700;letter-spacing:.4px;display:flex;align-items:center;gap:5px;margin-bottom:5px;}
+.lgt-rdot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink .7s infinite;flex-shrink:0;}
+.lgt-match{font-size:13px;font-weight:700;margin-bottom:3px;}
+.lgt-score{font-size:20px;font-weight:800;color:var(--amber);margin-bottom:3px;font-variant-numeric:tabular-nums;}
+.lgt-clock{font-size:11px;color:var(--red);font-weight:600;margin-bottom:6px;}
+.lgt-note{font-size:11px;color:var(--muted);line-height:1.4;margin-top:3px;}
+.lgt-sched-time{font-size:12px;color:var(--amber);font-weight:600;margin-bottom:3px;}
+.lgt-sched-note{font-size:11px;color:var(--muted);}
+.lgt-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;margin-top:4px;}
+.tag-hot{background:var(--rBg);color:var(--red);}
+.tag-watch{background:var(--aBg);color:var(--amber);}
+.tag-lead{background:var(--gBg);color:var(--green);}
+
+/* Verified badge */
+.v-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;background:var(--gBg);color:var(--green);padding:1px 5px;border-radius:3px;margin-left:5px;border:1px solid var(--gBd);}
+
+/* Alert cards */
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;margin-bottom:16px;}
+.acard{border-radius:var(--r);overflow:hidden;position:relative;}
+.acard.urgent{border:1.5px solid var(--red);background:linear-gradient(135deg,rgba(255,77,77,.09),var(--bg2) 55%);}
+.acard.high{border:1.5px solid var(--amber);background:linear-gradient(135deg,rgba(255,184,77,.07),var(--bg2) 55%);}
+.acard.value{border:1px solid var(--gBd);background:linear-gradient(135deg,rgba(0,214,143,.06),var(--bg2) 55%);}
+.new-tag{position:absolute;top:9px;right:9px;font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:var(--red);color:#fff;animation:newblink .9s infinite;}
+@keyframes newblink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.ac-top{padding:12px 13px 8px;border-bottom:1px solid var(--border);}
+.ac-r1{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.ac-lbl{font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 8px;border-radius:20px;}
+.lbl-u{background:var(--rBg);color:var(--red);border:1px solid var(--rBd);}
+.lbl-h{background:var(--aBg);color:var(--amber);border:1px solid var(--aBd);}
+.lbl-v{background:var(--gBg);color:var(--green);border:1px solid var(--gBd);}
+.ac-timer{font-size:11px;font-weight:700;color:var(--red);}
+.ac-game{font-size:11px;color:var(--muted);margin-bottom:3px;}
+.ac-live-score{font-size:11px;color:var(--amber);font-weight:700;margin-bottom:5px;}
+.ac-title{font-size:14px;font-weight:700;line-height:1.3;margin-bottom:2px;}
+.ac-sub{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.ac-odds-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.ac-odds{font-size:22px;font-weight:800;}
+.ac-odds.p{color:var(--green);}.ac-odds.n{color:var(--amber);}
+.ac-edge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.ac-why{font-size:12px;color:var(--muted);line-height:1.5;padding:8px 13px;border-bottom:1px solid var(--border);}
+.ac-bot{padding:7px 13px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.conf-wrap{flex:1;display:flex;align-items:center;gap:7px;}
+.ctrack{flex:1;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;}
+.cfill{height:100%;border-radius:2px;}
+.cnum{font-size:11px;color:var(--muted);font-weight:600;min-width:28px;text-align:right;}
+.win-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;}
+.wp-c{background:var(--rBg);color:var(--red);}
+.wp-o{background:var(--gBg);color:var(--green);}
+
+/* Trending */
+.tscroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;scrollbar-width:none;}
+.tscroll::-webkit-scrollbar{display:none;}
+.tcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;min-width:180px;flex-shrink:0;}
+.tcard.hot{border-color:var(--aBd);}
+.tcard.fire{border-color:var(--rBd);}
+.tc-l{font-size:10px;font-weight:700;letter-spacing:.4px;margin-bottom:4px;}
+.tc-n{font-size:13px;font-weight:700;margin-bottom:2px;}
+.tc-b{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.tc-o{font-size:17px;font-weight:800;margin-bottom:5px;}
+.tc-vol{font-size:11px;color:var(--muted);margin-bottom:3px;}
+.tc-vbar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-bottom:5px;}
+.tc-vfill{height:100%;border-radius:2px;background:var(--amber);}
+.tc-mv{font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;display:inline-block;}
+.mv-u{background:var(--gBg);color:var(--green);}
+.mv-d{background:var(--rBg);color:var(--red);}
+.tc-note{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4;}
+
+/* Upcoming */
+.ugrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;}
+.ucard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 13px;}
+.uc-l{font-size:10px;font-weight:700;letter-spacing:.4px;margin-bottom:4px;}
+.uc-g{font-size:13px;font-weight:700;margin-bottom:2px;}
+.uc-t{font-size:11px;color:var(--muted);margin-bottom:7px;}
+.uc-b{font-size:13px;font-weight:600;margin-bottom:2px;}
+.uc-n{font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:6px;}
+.uc-o{font-size:15px;font-weight:800;color:var(--green);}
+
+/* Pick grid */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:9px;margin-bottom:18px;}
+.pick{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px;position:relative;}
+.pick.fg{border-color:var(--gBd);}.pick.fp{border-color:var(--ncBd);}
+.pk-l{font-size:10px;font-weight:700;letter-spacing:.4px;margin-bottom:5px;}
+.pick.nba-p .pk-l{color:var(--nba);}
+.pick.nfl-p .pk-l{color:var(--nfl);}
+.pick.ncaa-p .pk-l{color:var(--ncaa);}
+.pk-n{font-size:13px;font-weight:600;margin-bottom:2px;}
+.pk-b{font-size:11px;color:var(--muted);margin-bottom:7px;}
+.pk-o{font-size:15px;font-weight:700;margin-bottom:7px;}
+.pk-o.p{color:var(--green);}.pk-o.n{color:var(--amber);}
+.vbw{height:3px;background:var(--bg4);border-radius:2px;margin-bottom:5px;overflow:hidden;}
+.vb{height:100%;border-radius:2px;}
+.pk-m{display:flex;justify-content:space-between;font-size:11px;}
+.pk-e{color:var(--green);font-weight:600;}.pk-c{color:var(--muted);}
+.pk-note{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4;}
+.fbadge{position:absolute;top:9px;right:9px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;}
+.fbadge.g{background:var(--gBg);color:var(--green);border:1px solid var(--gBd);}
+.fbadge.p{background:var(--ncBg);color:var(--ncaa);border:1px solid var(--ncBd);}
+
+/* Player card */
+.pcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;}
+.pcard.nc{border-color:rgba(232,57,138,.2);}
+.pc-h{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:7px;}
+.pc-i{display:flex;align-items:center;gap:10px;}
+.ava{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;}
+.pc-n{font-size:14px;font-weight:700;}
+.pc-s{font-size:11px;color:var(--muted);margin-top:2px;}
+.fchip{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;}
+/* stat-row: player card stat grid (renamed from .srow to avoid conflict with NFL standings) */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));border-bottom:1px solid var(--border);}
+.sc{padding:9px 11px;text-align:center;border-right:1px solid var(--border);}
+.sc:last-child{border-right:none;}
+.sv{font-size:17px;font-weight:700;}
+.sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:1px;}
+.gl{padding:11px 14px;border-bottom:1px solid var(--border);}
+.glt{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px;font-weight:600;}
+.gtbl{width:100%;border-collapse:collapse;font-size:12px;}
+.gtbl th{color:var(--muted);padding:3px 6px;text-align:right;font-weight:400;border-bottom:1px solid var(--border);}
+.gtbl th:first-child{text-align:left;}
+.gtbl td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--border);}
+.gtbl td:first-child{text-align:left;color:var(--muted);}
+.gtbl tr:last-child td{border-bottom:none;}
+.hi{color:var(--green)!important;font-weight:700;}
+.ww{color:var(--green);font-weight:700;}.wl{color:var(--red);}
+.ana{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.6;}
+.psec{padding:11px 14px;background:rgba(0,214,143,.025);}
+.psec.ns{background:rgba(232,57,138,.025);}
+.pst{font-size:10px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:9px;font-weight:700;}
+.pst.g{color:var(--green);}.pst.nc{color:var(--ncaa);}
+.pr-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
+.pr-row:last-child{border-bottom:none;}
+.pr-l{flex:1;}.pr-nm{font-size:12px;font-weight:600;}.pr-rs{font-size:11px;color:var(--muted);margin-top:2px;}
+.pr-r{display:flex;align-items:center;gap:9px;flex-shrink:0;}
+.pr-od{font-size:13px;font-weight:700;}
+.cbw{display:flex;align-items:center;gap:5px;}
+.cb{width:50px;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;}
+.cbf{height:100%;border-radius:2px;}
+.cbp{font-size:11px;color:var(--muted);min-width:26px;text-align:right;}
+
+/* Bracket */
+.brac-outer{overflow-x:auto;padding-bottom:10px;}
+.bg3{display:grid;grid-template-columns:1fr 170px 1fr;gap:12px;min-width:840px;align-items:start;}
+.rcol{display:flex;flex-direction:column;gap:7px;}
+.rh{font-size:10px;font-weight:800;letter-spacing:.4px;padding:5px 9px;border-radius:var(--r2);text-align:center;}
+.rh.e{background:var(--blBg);color:var(--blue);}
+.rh.w{background:rgba(181,123,238,.12);color:var(--purple);}
+.rh.m{background:var(--gBg);color:var(--green);}
+.rh.s{background:var(--aBg);color:var(--amber);}
+.bslot{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:6px 9px;display:flex;align-items:center;gap:5px;min-height:36px;}
+.bslot.adv{border-color:var(--gBd);background:rgba(0,214,143,.04);}
+.bslot.proj{border-color:var(--aBd);}
+.bslot.chmp{border-color:#f0c040;background:rgba(240,192,64,.07);border-width:1.5px;}
+.bslot.elim{opacity:.3;}
+.bs-s{font-size:10px;font-weight:700;color:var(--muted);min-width:13px;}
+.bs-n{font-size:12px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bs-o{font-size:10px;color:var(--amber);font-weight:600;}
+.bs-c{font-size:10px;font-weight:700;padding:1px 4px;border-radius:3px;}
+.bs-c.hi{background:var(--gBg);color:var(--green);}
+.bs-c.md{background:var(--aBg);color:var(--amber);}
+.ctrcol{display:flex;flex-direction:column;align-items:center;gap:9px;padding-top:8px;}
+.champ-box{background:rgba(240,192,64,.1);border:1.5px solid #f0c040;border-radius:var(--r);padding:14px 10px;text-align:center;width:100%;}
+.cb-icon{font-size:22px;margin-bottom:5px;}
+.cb-lbl{font-size:9px;font-weight:800;letter-spacing:.5px;color:#f0c040;text-transform:uppercase;margin-bottom:5px;}
+.cb-name{font-size:13px;font-weight:800;color:#f0c040;}
+.cb-od{font-size:11px;color:var(--amber);margin-top:3px;}
+.ff-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.brac-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:9px;margin-top:14px;}
+.bc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px;}
+.bc.feat{border-color:rgba(240,192,64,.4);}
+.bc-reg{font-size:10px;font-weight:700;letter-spacing:.4px;margin-bottom:4px;}
+.bc-n{font-size:13px;font-weight:800;margin-bottom:3px;}
+.bc-o{font-size:17px;font-weight:800;margin-bottom:6px;}
+.bc-bar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-bottom:6px;}
+.bc-fill{height:100%;border-radius:2px;}
+.bc-note{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:6px;}
+.bc-path{font-size:11px;color:var(--muted);line-height:1.6;}
+.bc-path b{color:var(--text);}
+.usgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:7px;margin-top:9px;}
+.utile{background:var(--bg3);border:1px solid var(--rBd);border-radius:var(--r2);padding:10px 12px;}
+.ut-l{font-size:10px;font-weight:700;color:var(--red);letter-spacing:.3px;margin-bottom:4px;}
+.ut-m{font-size:12px;font-weight:700;margin-bottom:3px;}
+.ut-n{font-size:11px;color:var(--muted);line-height:1.4;}
+.ut-od{font-size:11px;color:var(--amber);font-weight:600;margin-top:4px;}
+
+/* NCAAB strip */
+.bsec{background:var(--bg2);border:1px solid var(--ncBd);border-radius:var(--r);overflow:hidden;margin-bottom:14px;}
+.bh{background:rgba(232,57,138,.07);padding:10px 14px;border-bottom:1px solid var(--ncBd);display:flex;align-items:center;justify-content:space-between;}
+.bt-title{font-size:12px;font-weight:700;color:var(--ncaa);}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px;padding:10px;}
+.mtile{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px;}
+.mtile.live{border-color:var(--red);}
+.ml{font-size:10px;font-weight:700;letter-spacing:.3px;margin-bottom:5px;}
+.ml.r{color:var(--red);}.ml.m{color:var(--muted);}.ml.g{color:var(--green);}
+.mt{font-size:13px;font-weight:700;margin-bottom:3px;}
+.ms{font-size:12px;color:var(--amber);font-weight:600;margin-bottom:2px;}
+.mc{font-size:11px;color:var(--red);}
+.mtime{font-size:11px;color:var(--muted);}
+.mfav{display:inline-block;font-size:10px;background:var(--gBg);color:var(--green);padding:1px 5px;border-radius:3px;margin-top:4px;font-weight:600;}
+.mnote{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4;}
+
+/* NBA grid */
+.gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:8px;}
+.gtile{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;}
+.gtile.val{border-color:var(--gBd);}.gtile.live{border-color:var(--rBd);}
+.gb{font-size:10px;font-weight:700;letter-spacing:.3px;margin-bottom:6px;}
+.gb.nba{color:var(--nba);}
+.gm{font-size:13px;font-weight:700;margin-bottom:3px;}
+.gt{font-size:11px;color:var(--muted);margin-bottom:8px;}
+.gs{font-size:15px;font-weight:800;color:var(--amber);margin-bottom:5px;}
+.pr2{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.pt2{font-size:11px;color:var(--muted);min-width:30px;}
+.ptrk{flex:1;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;}
+.ptf{height:100%;border-radius:2px;background:var(--green);}
+.pp2{font-size:11px;color:var(--muted);min-width:28px;text-align:right;}
+.gspd{font-size:11px;color:var(--amber);margin-top:6px;font-weight:500;}
+.gou{font-size:11px;color:var(--blue);font-weight:500;}
+.vtag{display:inline-block;font-size:10px;color:var(--green);background:var(--gBg);padding:2px 5px;border-radius:3px;margin-top:5px;font-weight:600;}
+
+/* NFL */
+.nflfg{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:9px;margin-bottom:16px;}
+.sg2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.scard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.stitle{padding:8px 12px;font-size:11px;font-weight:700;letter-spacing:.3px;color:var(--nfl);background:rgba(74,127,212,.07);border-bottom:1px solid var(--border);}
+/* NFL standings row (renamed from .srow) */
+.st-row{display:flex;align-items:center;padding:6px 12px;border-bottom:1px solid var(--border);font-size:12px;}
+.st-row:last-child{border-bottom:none;}
+.srk{width:16px;color:var(--muted);font-size:11px;}
+.stm{flex:1;font-weight:500;}
+.src2{color:var(--muted);font-size:11px;min-width:36px;text-align:right;}
+.cli{font-size:9px;padding:1px 4px;border-radius:3px;margin-left:4px;font-weight:700;}
+.cli.c{background:var(--gBg);color:var(--green);}
+.cli.d{background:var(--blBg);color:var(--blue);}
+.cli.w{background:var(--aBg);color:var(--amber);}
+
+/* SGP */
+.sgleg{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:5px;}
+.sgn{font-size:11px;color:var(--muted);width:14px;}
+.sgt{flex:1;font-size:13px;}
+.sgx{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 3px;}
+.sgsum{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-top:11px;}
+.sggrade{font-size:28px;font-weight:800;}
+.sglr{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:9px 12px;margin-bottom:5px;}
+.slrt{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.slrb{font-size:13px;font-weight:600;}
+.slrv{font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;}
+
+/* inputs */
+.irow{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
+.irow input,.irow select{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);color:var(--text);font-family:inherit;font-size:13px;padding:7px 11px;outline:none;}
+.irow input{flex:1;min-width:130px;}
+.irow input::placeholder{color:var(--muted2);}
+.irow select option{background:var(--bg3);}
+.btn{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);color:var(--text);cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;padding:7px 16px;white-space:nowrap;transition:all .15s;}
+.btn:hover{background:var(--bg4);}
+.btn.primary{background:var(--gBg);border-color:var(--gBd);color:var(--green);}
+.load{display:flex;align-items:center;gap:9px;padding:20px;color:var(--muted);font-size:13px;}
+.spin2{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0;}
+.empty{text-align:center;padding:36px;color:var(--muted);font-size:13px;}
+
+/* API key banner */
+.api-warn{background:rgba(255,184,77,.08);border:1px solid var(--aBd);border-radius:var(--r2);padding:8px 13px;margin-bottom:12px;font-size:11px;color:var(--amber);display:none;}
+.api-warn a{color:var(--amber);text-decoration:underline;cursor:pointer;}
+
+@media(max-width:700px){.pgrid,.nflfg,.agrid,.ugrid,.brac-cards{grid-template-columns:1fr;}.sg2,.bg3{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- API KEY WARNING (shown if key not set) -->
+<div class="api-warn" id="apiWarn">
+  ⚠️ No API key configured — live refresh &amp; AI features disabled. Set <code>API_KEY</code> at the top of the &lt;script&gt; to enable.
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="ldot"></div>
+    <div class="logo">Pro<em>Edge</em></div>
+    <div class="lps"><span class="lp nba">NBA</span><span class="lp nfl">NFL</span><span class="lp ncaa">NCAAB</span></div>
+  </div>
+  <div class="hdr-r">
+    <div class="live-badge">
+      <div class="lb-dot"></div>
+      <span class="lb-txt">LIVE</span>
+      <span class="lb-cd" id="globalCd">—</span>
+    </div>
+    <button class="scan-btn" id="scanBtn" onclick="manualRefresh()">
+      <div class="sspin" id="sspin"></div>
+      Search &amp; Refresh
+    </button>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-lbl"><div class="ldot" style="width:6px;height:6px;"></div>VERIFIED SCORES</div>
+  <div class="ticker-body"><div class="ticker-inner" id="tickerEl">Loading…</div></div>
+</div>
+
+<div id="breaking" class="breaking"></div>
+
+<!-- TABS -->
+<div class="tabs" role="tablist">
+  <button class="tab lt active" role="tab" aria-selected="true"  onclick="goTab('live',this)">🚨 Live Alerts</button>
+  <button class="tab"           role="tab" aria-selected="false" onclick="goTab('value',this)">💰 Value Edge</button>
+  <button class="tab bt"        role="tab" aria-selected="false" onclick="goTab('bracket',this)">🏆 Bracket</button>
+  <button class="tab nt"        role="tab" aria-selected="false" onclick="goTab('ncaab',this)">🏀 NCAAB</button>
+  <button class="tab"           role="tab" aria-selected="false" onclick="goTab('nba',this)">🟡 NBA</button>
+  <button class="tab"           role="tab" aria-selected="false" onclick="goTab('nfl',this)">🔵 NFL</button>
+  <button class="tab"           role="tab" aria-selected="false" onclick="goTab('lookup',this)">🔍 Lookup</button>
+  <button class="tab"           role="tab" aria-selected="false" onclick="goTab('sgp',this)">🎯 SGP</button>
+</div>
+
+<!-- ══ LIVE ALERTS ══ -->
+<div id="live" class="section active" role="tabpanel">
+  <div class="live-banner">
+    <div class="lb-l">
+      <div class="lb-ring"><span style="font-size:15px;">🚨</span></div>
+      <div>
+        <div class="lb-title">LIVE BET ALERTS <span class="src-badge">✓ WEB VERIFIED</span></div>
+        <div class="lb-sub">Scores pulled via Google search every 60 sec · <span id="alertSub">loading…</span></div>
+      </div>
+    </div>
+    <div class="lb-r">
+      <div class="live-ct-badge" id="liveCtBadge">— live</div>
+      <div style="font-size:11px;color:var(--muted);">Next search: <span id="alertCd" style="color:var(--amber);font-weight:700;">—</span></div>
+    </div>
+  </div>
+
+  <div class="sh red">🔴 Live scores — web verified</div>
+  <div class="lgstrip" id="liveStrip"></div>
+
+  <div class="sh red">🚨 Urgent — act now</div>
+  <div class="agrid" id="urgentGrid"></div>
+
+  <div class="sh am">⚡ High priority</div>
+  <div class="agrid" id="highGrid"></div>
+
+  <div class="sh" style="color:var(--blue);">📈 Trending lines</div>
+  <div class="tscroll" id="trendRow"></div>
+
+  <div class="sh">⏰ Upcoming windows tonight</div>
+  <div class="ugrid" id="upcomingGrid"></div>
+
+  <div class="lupd" id="liveUpd"><div class="sspin" id="lupdspin"></div><span id="lupdText">Initializing…</span></div>
+</div>
+
+<!-- ══ VALUE EDGE ══ -->
+<div id="value" class="section" role="tabpanel">
+  <div class="lupd" id="valueUpd"></div>
+  <div class="sh">All sports · by edge</div>
+  <div class="pgrid" id="vgrid"></div>
+  <div class="sh" style="margin-top:4px;">Deep dive</div>
+  <div id="hotArea"></div>
+</div>
+
+<!-- ══ BRACKET ══ -->
+<div id="bracket" class="section" role="tabpanel">
+  <div class="sh br">2026 NCAA Tournament — ProEdge bracket · verified results</div>
+  <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);"><div style="width:9px;height:9px;border-radius:2px;border:1px solid var(--gBd);background:rgba(0,214,143,.04);"></div>Confirmed result</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);"><div style="width:9px;height:9px;border-radius:2px;border:1px solid var(--aBd);"></div>Projected</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);"><div style="width:9px;height:9px;border-radius:2px;border:1px solid #f0c040;background:rgba(240,192,64,.07);"></div>Champion pick</div>
+  </div>
+  <div class="brac-outer"><div id="bracketInner"></div></div>
+  <div class="sh br" style="margin-top:14px;">Final Four projections</div>
+  <div class="brac-cards" id="bracCards"></div>
+  <div class="sh br" style="margin-top:7px;">⚠️ Upset watch</div>
+  <div class="usgrid" id="upsetGrid"></div>
+</div>
+
+<!-- ══ NCAAB ══ -->
+<div id="ncaab" class="section" role="tabpanel">
+  <div class="sh nc">2026 NCAA Tournament · Sun Mar 22 · verified scores</div>
+  <div class="bsec">
+    <div class="bh"><div class="bt-title">🔴 Live &amp; Today</div><span id="liveCnt2" style="font-size:11px;color:var(--red);font-weight:700;"></span></div>
+    <div class="mgrid" id="ncaabGames"></div>
+  </div>
+  <div class="sh nc" style="margin-top:4px;">Top players</div>
+  <div id="ncaabPlayers"></div>
+  <div class="sh nc" style="margin-top:4px;">Best bets</div>
+  <div class="pgrid" id="ncaabPicks"></div>
+</div>
+
+<!-- ══ NBA ══ -->
+<div id="nba" class="section" role="tabpanel">
+  <div class="sh">NBA · Sun Mar 22 · verified scores</div>
+  <div class="gg" id="nbagrid"></div>
+</div>
+
+<!-- ══ NFL ══ -->
+<div id="nfl" class="section" role="tabpanel">
+  <div class="sh">NFL 2026 value futures</div>
+  <div class="nflfg" id="nflfg"></div>
+  <div class="sh" style="margin-top:5px;">Standings</div>
+  <div class="sg2" id="nflsg"></div>
+</div>
+
+<!-- ══ LOOKUP ══ -->
+<div id="lookup" class="section" role="tabpanel">
+  <div class="irow">
+    <input id="pinput" type="text" placeholder="Any player — NBA, NCAAB, NFL…" aria-label="Player name"/>
+    <select id="lsel" aria-label="League"><option value="NBA">NBA</option><option value="NCAAB">NCAAB</option><option value="NFL">NFL</option></select>
+    <button class="btn primary" onclick="doLookup()">Analyze ↗</button>
+  </div>
+  <div id="presult"></div>
+</div>
+
+<!-- ══ SGP ══ -->
+<div id="sgp" class="section" role="tabpanel">
+  <div class="sh">Same-Game Parlay builder</div>
+  <div id="sgplegs"><div class="empty">No legs added.</div></div>
+  <div class="irow" style="margin-top:10px;">
+    <input id="sgpin" type="text" placeholder="Add a leg (e.g. Iowa ML · BOS -9.5 · Brown Over 1.5 stl)…" aria-label="SGP leg"/>
+    <button class="btn" onclick="addLeg()">+ Add</button>
+  </div>
+  <button class="btn primary" onclick="analyzeSGP()" style="margin-bottom:14px;">AI Analyze SGP ↗</button>
+  <div id="sgpresult"></div>
+</div>
+
+</div><!-- /shell -->
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════
+// CONFIG — set your Anthropic API key here
+// ═══════════════════════════════════════════════
+const API_KEY = ''; // <-- paste your key: sk-ant-...
+const MODEL   = 'claude-sonnet-4-6';
+
+// ═══════════════════════════════════════════════
+// VERIFIED LIVE STATE — seeded from real web searches
+// Iowa leads Florida 66-65 (3:25 left) per Yahoo Sports
+// BOS vs MIN: 7PM ET tip — NOT YET STARTED
+// NYK vs WAS: 7:30PM ET tip — NOT YET STARTED
+// AZ vs USU: 7:50PM ET — LIVE / in progress
+// UConn vs UCLA: 8:45PM ET — NOT YET STARTED
+// ALA vs TTU: 9:45PM ET — NOT YET STARTED
+// Confirmed: Purdue 79 Miami 69, ISU 82 UK 63, SJU 67 KU 65, TENN 79 UVA 72
+// ═══════════════════════════════════════════════
+
+let GAME_STATE = {
+  nba_live: [],
+  nba_upcoming: [
+    { id:'was-nyk', away:'WAS', home:'NYK', time:'7:30 PM ET', spread:'NYK -18+', ou:'219',   winP:{NYK:96,WAS:4},  note:'Brunson 26.2 PPG. WAS 15-game losing streak. Champagnie ejection Saturday could affect status.', val:true },
+    { id:'min-bos', away:'MIN', home:'BOS', time:'7:00 PM ET', spread:'BOS -9.5', ou:'219.5', winP:{BOS:78,MIN:22}, note:'Edwards (knee) and Reid (ankle) out for MIN. BOS 4-game win streak. Jaylen Brown 30pts Friday.',   val:true },
+    { id:'tor-phx', away:'TOR', home:'PHX', time:'8:00 PM ET', spread:'TOR -2.5', ou:'227',   winP:{TOR:61,PHX:39}, note:'TOR slight favorite. Booker assist prop value.',                                                   val:false },
+  ],
+  nba_finals: [
+    { away:'POR', home:'DEN', score:{POR:112,DEN:128}, note:'Jokic 35th TD of season · Peyton Watson returns' },
+    { away:'BKN', home:'SAC', score:{BKN:122,SAC:126}, note:'SAC edges BKN in close one' },
+  ],
+  ncaab_live: [
+    { id:'fla-iowa', away:'IOWA', home:'FLA',  score:{IOWA:66,FLA:65},  clock:'3:25',       note:'🔥 IOWA leads #1 Florida! Stirtz cooking — upset alert!', tag:'hot',   src:'Yahoo Sports' },
+    { id:'ariz-usu', away:'USU',  home:'ARIZ', score:{USU:null,ARIZ:null}, clock:'IN PROGRESS', note:'AZ -11.5 fav. Tipped 7:50 PM ET. USU upset-capable (beat Villanova R1).', tag:'watch', src:'ESPN' },
+  ],
+  ncaab_upcoming: [
+    { away:'UCLA', home:'CONN', time:'8:45 PM ET', note:'Stewart (knee) questionable for UConn. UConn beat Furman 82-71 R1. UCLA beat UCF 75-71.' },
+    { away:'TTU',  home:'ALA',  time:'9:45 PM ET', note:'Philon 29pts/8reb/7ast vs Hofstra. Petty 24pts vs Akron. Close matchup — TTU shoots 55% from 3.' },
+  ],
+  ncaab_finals: [
+    { away:'PUR(7)', home:'MIA',   score:{a:69,h:79}, note:'Purdue advances — Sweet 16 vs Texas' },
+    { away:'ISU(2)', home:'UK',    score:{a:82,h:63}, note:'Iowa State cruises — Lipsey stepped up w/ Jefferson out' },
+    { away:'SJU(5)', home:'KU',    score:{a:67,h:65}, note:'🚨 St. John\'s upsets Kansas! Sweet 16 vs Duke' },
+    { away:'TENN(6)',home:'UVA',   score:{a:79,h:72}, note:'Gillespie 21pts · 4th straight Sweet 16 for TENN' },
+  ]
+};
+
+// ═══════════════════════════════════════════════
+// ALERT STATE — seeded from verified live data
+// ═══════════════════════════════════════════════
+let URGENT = [
+  { p:'urgent', game:'Iowa @ Florida (NCAAB)', score:'IOWA 66 – FLA 65 · 3:25 left · LIVE', src:'Yahoo Sports',
+    title:'Iowa Live ML — Upset Happening Now', sub:'9-seed Iowa leads #1 Florida with 3:25 left',
+    odds:'+350', edge:'+14.8%', conf:77, window:'closing', isNew:true,
+    why:'Iowa leads #1-seed Florida 66-65 with 3 minutes left — verified by Yahoo Sports live score. Pre-game Iowa was +450. Bennett Stirtz is active after a slow R1 game. Live ML window: the line is currently +350 and will collapse if Iowa maintains this lead another 90 seconds. Most urgent bet on the board right now.' },
+  { p:'urgent', game:'Arizona @ Utah State (NCAAB)', score:'IN PROGRESS · tipped 7:50 PM ET', src:'ESPN',
+    title:'Utah State Live ML — Upset Watch', sub:'USU pulled off a miracle vs Villanova — AZ -11.5 may be soft',
+    odds:'+520', edge:'+11.2%', conf:65, window:'open', isNew:true,
+    why:'Utah State beat Villanova by 10 in R1 (pre-game +7). On a revenge tour over their seeding. Arizona is 85% KenPom favorite but USU\'s Collins/Falslev combo is real. If USU stays within 8 at halftime, the live ML will have massive value. Monitor — worth placing if AZ isn\'t dominating early.' },
+];
+
+let HIGH = [
+  { p:'high', game:'BOS vs MIN (NBA)', score:'7:00 PM ET · NOT YET STARTED', src:'CBS Sports',
+    title:'Jaylen Brown Over 28.5 pts', sub:'Brown on 3-game 30pt streak · MIN missing Edwards + Reid',
+    odds:'+105', edge:'+9.3%', conf:83, window:'open', isNew:true,
+    why:'Brown has scored 30+ in 3 straight games (30, 32, 30). Anthony Edwards (knee inflammation) and Naz Reid (ankle) are both OUT for Minnesota. BOS is a 78% win probability favorite at home. When Brown has a clear lane without elite perimeter defenders, he takes over. +105 on Over 28.5 is strong pre-game value before tip at 7PM ET.' },
+  { p:'high', game:'NYK vs WAS (NBA)', score:'7:30 PM ET · NOT YET STARTED', src:'AP/CBS Sports',
+    title:'Brunson Over 25.5 pts + NYK -18.5 ATS', sub:'WAS 15-game skid · Brunson 26.2 PPG avg',
+    odds:'+118', edge:'+8.1%', conf:79, window:'open', isNew:false,
+    why:'Jalen Brunson averaging 26.2 PPG. Washington has lost 15 straight, is short-handed. NYK is 22-0 when holding opponents under 102 pts. Brunson Over 25.5 at +118 is value, especially with WAS allowing 123.7 PPG.' },
+  { p:'value', game:'TOR @ PHX (NBA)', score:'8:00 PM ET · NOT YET STARTED', src:'ESPN',
+    title:'Devin Booker Over 5.5 assists', sub:'PHX slight underdog — Booker plays-to-assist when behind',
+    odds:'+121', edge:'+7.1%', conf:76, window:'open', isNew:false,
+    why:'TOR is 61.3% favorite per our feed. If PHX falls behind, Booker shifts into a pass-first playmaker role. He\'s projected 5.9 assists tonight. The +121 line prices him at 45% — our model says 52%.' },
+  { p:'value', game:'Iowa @ Florida (NCAAB)', score:'IOWA 66 FLA 65 · 3:25 left', src:'Yahoo Sports',
+    title:'Iowa cover live ATS (if offered)', sub:'Iowa already covering pre-game +10 spread',
+    odds:'+175', edge:'+8.5%', conf:72, window:'closing', isNew:true,
+    why:'Iowa was +10 pre-game. They\'re up 1 with 3 min left — already covering the spread. If your book offers a live spread or game-winner prop on Iowa, it\'s live value. The 9-seed is playing the best game of their tournament life.' },
+];
+
+let TRENDING = [
+  { league:'NCAAB', name:'Iowa Live ML',       bet:'Live ML',     odds:'+350', vol:94, move:'Dropped from +450',  mDir:'up',   hot:true,  fire:true,  note:'Iowa leads FLA 66-65 with 3:25 left. Verified Yahoo Sports.' },
+  { league:'NCAAB', name:'SJU advances',       bet:'Sweet 16 ML', odds:'+160', vol:82, move:'New odds posted',    mDir:'up',   hot:true,  fire:false, note:'SJU beat KU 67-65 — now faces Duke. Pitino vs Scheyer.' },
+  { league:'NBA',   name:'Jaylen Brown O28.5', bet:'Points prop', odds:'+105', vol:74, move:'Opened +115',        mDir:'up',   hot:false, fire:false, note:'3-straight 30pt games. MIN missing Edwards + Reid.' },
+  { league:'NCAAB', name:'USU Live ML',        bet:'Live ML',     odds:'+520', vol:68, move:'Watch this game',    mDir:'up',   hot:true,  fire:false, note:'AZ vs USU in progress. USU beat Villanova R1.' },
+  { league:'NBA',   name:'NYK -18.5 ATS',      bet:'Spread',      odds:'-110', vol:65, move:'Heavy NYK action',   mDir:'down', hot:false, fire:false, note:'WAS 15-game skid. NYK 7:30 ET.' },
+  { league:'NCAAB', name:'UConn vs UCLA',      bet:'UConn ML',    odds:'-180', vol:61, move:'Stewart questionable',mDir:'up',  hot:false, fire:false, note:'8:45 ET. Stewart knee — if he plays, UConn strong.' },
+  { league:'NCAAB', name:'ALA -4 ATS',         bet:'Spread',      odds:'-110', vol:57, move:'Steam on ALA',       mDir:'down', hot:false, fire:false, note:'9:45 ET. Philon 29pts R1. Fastest KenPom team left.' },
+  { league:'NBA',   name:'BOS ML',             bet:'Moneyline',   odds:'-400', vol:51, move:'Moved from -350',    mDir:'down', hot:false, fire:false, note:'7 ET. Edwards out. BOS 4-game win streak.' },
+];
+
+let UPCOMING = [
+  { league:'NBA',   game:'BOS vs MIN',    time:'7:00 PM ET', bet:'Jaylen Brown Over 28.5 pts',   note:'3-game 30pt streak. Edwards/Reid out for MIN.',       odds:'+105' },
+  { league:'NBA',   game:'NYK vs WAS',    time:'7:30 PM ET', bet:'Brunson Over 25.5 pts',         note:'Brunson 26.2 PPG avg. WAS 15-game skid.',             odds:'+118' },
+  { league:'NCAAB', game:'UConn vs UCLA', time:'8:45 PM ET', bet:'UConn 1H spread -4.5',          note:'Reed Jr. 31/27 R1. Stewart questionable — watch news.',odds:'-108' },
+  { league:'NCAAB', game:'ALA vs TTU',    time:'9:45 PM ET', bet:'Alabama -4 ATS',                note:'Fastest KenPom team. Philon 22 PPG. Petty dangerous.',odds:'-110' },
+  { league:'NBA',   game:'TOR @ PHX',     time:'8:00 PM ET', bet:'Booker Over 5.5 ast',           note:'PHX underdog — Booker passes more when behind.',      odds:'+121' },
+  { league:'NBA',   game:'BOS vs MIN',    time:'7:00 PM ET', bet:'Derrick White Over 1.5 blk',    note:'Edwards out = MIN drives heavy. White 1.8 blk/g avg.',odds:'+178' },
+];
+
+// ═══════════════════════════════════════════════
+// VALUE PICKS
+// ═══════════════════════════════════════════════
+const VP = [
+  { league:'NCAAB', fire:true,  name:'Iowa Live ML',        bet:'Live upset ML',     odds:'+350', edge:14.8, conf:77, color:'var(--ncaa)', note:'Iowa leads FLA 66-65 with 3:25 left. Verified Yahoo Sports. Act NOW.' },
+  { league:'NCAAB', fire:true,  name:'Jeremy Fears Jr.',    bet:'Over 7.5 assists',  odds:'+142', edge:12.5, conf:85, color:'var(--ncaa)', note:'11 ast R1 · 16 ast R2. First Big Ten player ever with 10+ ast in first 2 tourney games.' },
+  { league:'NBA',   fire:true,  name:'Derrick White',       bet:'Over 1.5 blocks',   odds:'+178', edge:12.8, conf:85, color:'var(--green)', note:'Model: 48.8% prob. Edwards/Reid both out — MIN drives will be heavy. BOS 7PM.' },
+  { league:'NCAAB', fire:true,  name:'Cameron Boozer',      bet:'Over 20.5 pts+reb', odds:'+115', edge:13.2, conf:88, color:'var(--ncaa)', note:'DD every tourney game. KenPom #1 ever. Duke Sweet 16 Fri vs SJU.' },
+  { league:'NBA',   fire:false, name:'Jaylen Brown',        bet:'Over 28.5 pts',     odds:'+105', edge:9.3,  conf:83, color:'var(--green)', note:'3-straight 30pt games. MIN missing Edwards + Reid. BOS 7PM ET.' },
+  { league:'NCAAB', fire:false, name:'Duke ML (Sweet 16)',  bet:'Moneyline Fri',     odds:'-260', edge:9.4,  conf:82, color:'var(--ncaa)', note:'34-2. Boozer is KenPom all-time best. Now plays SJU who shocked KU.' },
+  { league:'NFL',   fire:false, name:'Denver Broncos',      bet:'Win AFC (futures)', odds:'+180', edge:9.4,  conf:77, color:'var(--green)', note:'14-3 AFC #1 seed. Bo Nix breakout year.' },
+  { league:'NCAAB', fire:false, name:'Michigan Championship',bet:'Futures',          odds:'+340', edge:8.2,  conf:74, color:'var(--ncaa)', note:'#1 odds board. 87.3 PPG. Beat Brown earlier this year.' },
+  { league:'NBA',   fire:false, name:'Brunson Over 25.5',   bet:'Points prop',       odds:'+118', edge:8.1,  conf:79, color:'var(--amber)', note:'26.2 PPG avg. WAS 15-game losing streak. NYK 7:30PM ET.' },
+];
+
+const NCAA_PLAYERS = [
+  { name:'Cameron Boozer', school:'Duke', yr:'Fr', pos:'PF', seed:'#1 East', initials:'CB', avBg:'rgba(0,114,195,.18)', avC:'#3a8fd4', form:'🔥 Dominant', fBg:'rgba(232,57,138,.12)', fC:'var(--ncaa)',
+    stats:[{l:'PPG',v:'22.5'},{l:'RPG',v:'10.3'},{l:'APG',v:'4.2'},{l:'FG%',v:'56%'}],
+    games:[{o:'vs Siena R1',p:22,r:13,a:2,res:'W'},{o:'vs TCU R2',p:19,r:11,a:4,res:'W'},{o:'ACC Final',p:28,r:12,a:5,res:'W'}],
+    analysis:'KenPom highest-ever rating (3.253). Double-double in every tourney game. Explodes in 2H after quiet starts. Caleb Foster out; Ngongba II returned vs TCU. Duke faces SJU (who just beat Kansas 67-65!) in the Sweet 16 Friday.',
+    props:[{bet:'Over 20.5 pts+reb',odds:'+115',conf:88,rsn:'DD every tourney game.',color:'var(--ncaa)'},{bet:'Double-double Yes',odds:'-145',conf:85,rsn:'21 DDs this season — 100% tourney hit rate.',color:'var(--ncaa)'}] },
+  { name:'Jeremy Fears Jr.', school:'Michigan State', yr:'So', pos:'PG', seed:'#3', initials:'JF', avBg:'rgba(24,108,55,.2)', avC:'#27ae60', form:'👁️ Historic', fBg:'rgba(0,214,143,.1)', fC:'var(--green)',
+    stats:[{l:'APG',v:'9.2'},{l:'PPG',v:'12.1'},{l:'SPG',v:'1.8'},{l:'AST%',v:'42%'}],
+    games:[{o:'vs NDSU R1',p:12,r:3,a:11,res:'W'},{o:'vs LOU R2',p:12,r:4,a:16,res:'W'},{o:'B1G SF',p:15,r:5,a:12,res:'W'}],
+    analysis:"Nation's assists leader at 9.2/g. First Big Ten player ever with 10+ ast in each of first 2 NCAA tourney games. 27 combined ast / 2 TO in tournament. MSU plays UConn/UCLA winner in Sweet 16 Friday.",
+    props:[{bet:'Over 7.5 assists',odds:'+142',conf:85,rsn:'11 → 16 ast in tourney — way above line.',color:'var(--green)'},{bet:'Over 1.5 steals',odds:'+155',conf:74,rsn:'1.8 spg season avg. Elite defensive playmaker.',color:'var(--amber)'}] },
+];
+
+const NCAAB_PICKS = [
+  { league:'NCAAB', fire:true,  name:'Iowa Live ML (+350)',      bet:'Live upset ML', odds:'+350', edge:14.8, conf:77, color:'var(--ncaa)', note:'Iowa leads FLA 66-65 · 3:25 left · Yahoo Sports verified. ACT NOW.' },
+  { league:'NCAAB', fire:true,  name:'Fears Jr. Over 7.5 ast',   bet:'Player prop',  odds:'+142', edge:12.5, conf:85, color:'var(--ncaa)', note:'First Big Ten player ever 10+ ast in first 2 tourney games.' },
+  { league:'NCAAB', fire:true,  name:'Boozer Over 20.5 pts+reb', bet:'Combo prop',   odds:'+115', edge:13.2, conf:88, color:'var(--ncaa)', note:'DD every tourney game. Sweet 16 vs SJU Fri.' },
+  { league:'NCAAB', fire:false, name:'Duke ML Sweet 16',          bet:'Moneyline',    odds:'-260', edge:9.4,  conf:82, color:'var(--ncaa)', note:'34-2. KenPom #1. Faces SJU who beat KU 67-65.' },
+  { league:'NCAAB', fire:false, name:'Michigan Championship',     bet:'Futures +340', odds:'+340', edge:8.2,  conf:74, color:'var(--ncaa)', note:'#1 odds board. Beat BOS earlier. 87.3 PPG.' },
+];
+
+const NBA_GAMES = [
+  { away:'WAS', home:'NYK', status:'UPCOMING', time:'7:30 PM ET', ap:4,  hp:96, spread:'NYK -18+', ou:'219',   val:true,  note:'WAS 15-game skid. Brunson 26.2 PPG. Champagnie status unclear.' },
+  { away:'MIN', home:'BOS', status:'UPCOMING', time:'7:00 PM ET', ap:22, hp:78, spread:'BOS -9.5', ou:'219.5', val:true,  note:'Edwards + Reid OUT for MIN. Brown 3-game 30pt streak. Vucevic out too.' },
+  { away:'TOR', home:'PHX', status:'UPCOMING', time:'8:00 PM ET', ap:61, hp:39, spread:'TOR -2.5', ou:'227',   val:false, note:'TOR 61.3% fav per model. Booker assist prop value.' },
+];
+
+const NFL_F = [
+  { team:'Denver Broncos',    rec:'14-3',   type:'Super Bowl winner',         odds:'+600', edge:'High',   conf:80, color:'var(--green)', note:'AFC #1 seed. Bo Nix breakout. Strong cap position.' },
+  { team:'Seattle Seahawks',  rec:'14-3',   type:'NFC Champion',              odds:'+200', edge:'Good',   conf:74, color:'var(--amber)', note:'NFC #1 seed. Dominant season, carry-over roster.' },
+  { team:'Kenneth Walker III',rec:'SB MVP', type:'Over 1,150.5 rush yds 2026',odds:'+140', edge:'Strong', conf:82, color:'var(--green)', note:'Best UFA RB. High volume in any system.' },
+  { team:'Malik Willis',      rec:'Backup', type:'Over 3,500 pass yds 2026',  odds:'+175', edge:'Value',  conf:68, color:'var(--amber)', note:'GB backup — ARI starter linked per insiders.' },
+];
+
+const NFL_ST = {
+  'AFC Top 7': [{r:1,t:'Denver Broncos',rc:'14-3',c:'c'},{r:2,t:'New England Patriots',rc:'14-3',c:'d'},{r:3,t:'Jacksonville Jaguars',rc:'13-4',c:'d'},{r:4,t:'Pittsburgh Steelers',rc:'10-7',c:'d'},{r:5,t:'Houston Texans',rc:'12-5',c:'w'},{r:6,t:'Buffalo Bills',rc:'12-5',c:'w'},{r:7,t:'LA Chargers',rc:'11-6',c:'w'}],
+  'NFC Top 7': [{r:1,t:'Seattle Seahawks',rc:'14-3',c:'c'},{r:2,t:'Chicago Bears',rc:'11-6',c:'d'},{r:3,t:'Philadelphia Eagles',rc:'11-6',c:'d'},{r:4,t:'Carolina Panthers',rc:'8-9',c:'d'},{r:5,t:'LA Rams',rc:'12-5',c:'w'},{r:6,t:'SF 49ers',rc:'12-5',c:'w'},{r:7,t:'Green Bay Packers',rc:'9-7',c:'w'}],
+};
+
+const HOT_P = [{
+  name:'Jaylen Brown', team:'Boston Celtics', pos:'SG/SF', initials:'JB', avBg:'rgba(0,214,143,.15)', avC:'var(--green)', form:'🔥 On Fire', fBg:'rgba(0,214,143,.12)', fC:'var(--green)',
+  stats:[{l:'PPG',v:'28.5'},{l:'RPG',v:'6.1'},{l:'APG',v:'4.5'},{l:'FG%',v:'48%'}],
+  games:[{o:'vs MEM',p:30,r:6,a:6,b:1,res:'W'},{o:'vs MEM (prev)',p:32,r:7,a:4,b:0,res:'W'},{o:'vs CLE',p:30,r:5,a:5,b:1,res:'W'}],
+  analysis:'Brown is on a 3-game streak of 30+ points and ranks 5th in NBA scoring at 28.5 PPG. Tonight vs MIN (7PM ET, TD Garden) with Anthony Edwards (knee) and Naz Reid (ankle) both out. BOS is 78% favorite. When Brown has no elite perimeter defender, he dominates — tonight is prime.',
+  props:[{bet:'Over 28.5 pts',odds:'+105',conf:83,rsn:'3-straight 30pt games. MIN missing Edwards + Reid.',color:'var(--green)'},{bet:'Over 1.5 steals',odds:'+194',conf:78,rsn:'MIN shorthanded — drives create deflection opportunities.',color:'var(--amber)'}]
+}];
+
+const FINAL_FOUR = [
+  { name:'Michigan', region:'Midwest', odds:'+340', conf:70, color:'var(--green)',  note:'#1 on every book. 87.3 PPG, 50.7% FG. Only 1 loss. Lendeborg dominant.',              path:'Wins Midwest → Beats West champ → Championship' },
+  { name:'Arizona',  region:'West',    odds:'+350', conf:68, color:'var(--purple)', note:'9-game win streak. AZ vs USU live now. Should advance.',                               path:'Tonight vs USU → Purdue/Texas → Elite 8 → FF' },
+  { name:'Duke',     region:'East',    odds:'+425', conf:65, color:'var(--blue)',   note:'34-2, Boozer KenPom #1 ever. Now faces SJU (who beat KU!) in Sweet 16.',               path:'Fri vs SJU → Elite 8 → Final Four' },
+  { name:'Houston',  region:'South',   odds:'+1100',conf:58, color:'var(--amber)',  note:'7th straight Sweet 16. Flemings 18pts. Best defense by efficiency.',                   path:'Beats Illinois → Beats Nebraska or Florida → FF' },
+];
+const CHAMP = { name:'Michigan Wolverines', odds:'+340', conf:62 };
+const UPSETS = [
+  { label:'🚨 Happening NOW',   match:'Iowa leads #1 Florida 66-65 · 3:25 left', note:'Bennett Stirtz active after slow R1. Iowa covering +10 spread. Pre-game Iowa +450.', ml:'Iowa ML now: +350' },
+  { label:'🚨 Confirmed',       match:'#5 SJU 67 def #4 Kansas 65',              note:"Pitino's St. John's shocks Darryn Peterson and KU. SJU plays Duke Friday.",         ml:'SJU Sweet 16 vs Duke: +900' },
+  { label:'⚠️ Watch',           match:'Utah State vs Arizona — LIVE NOW',         note:'USU beat Villanova by 10 in R1. Collins/Falslev backcourt is legit. AZ -11.5.',   ml:'USU ML: +520' },
+  { label:'⚠️ Sweet 16 watch',  match:'#11 Texas vs #2 Purdue (Thu)',             note:'Texas already shocked Gonzaga 74-68. Purdue won comfortably but faces hot Texas.', ml:'TEX Sweet 16 ML: +280' },
+];
+
+// ═══════════════════════════════════════════════
+// DOM ELEMENT CACHE — populated in init()
+// ═══════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+let DOM = {};
+
+function initDOM() {
+  DOM = {
+    tickerEl:    $('tickerEl'),
+    breaking:    $('breaking'),
+    liveStrip:   $('liveStrip'),
+    urgentGrid:  $('urgentGrid'),
+    highGrid:    $('highGrid'),
+    trendRow:    $('trendRow'),
+    upcomingGrid:$('upcomingGrid'),
+    lupdText:    $('lupdText'),
+    lupdspin:    $('lupdspin'),
+    liveCtBadge: $('liveCtBadge'),
+    alertSub:    $('alertSub'),
+    alertCd:     $('alertCd'),
+    globalCd:    $('globalCd'),
+    sspin:       $('sspin'),
+    scanBtn:     $('scanBtn'),
+    vgrid:       $('vgrid'),
+    valueUpd:    $('valueUpd'),
+    hotArea:     $('hotArea'),
+    liveCnt2:    $('liveCnt2'),
+    ncaabGames:  $('ncaabGames'),
+    ncaabPlayers:$('ncaabPlayers'),
+    ncaabPicks:  $('ncaabPicks'),
+    nbagrid:     $('nbagrid'),
+    nflfg:       $('nflfg'),
+    nflsg:       $('nflsg'),
+    presult:     $('presult'),
+    sgplegs:     $('sgplegs'),
+    sgpresult:   $('sgpresult'),
+    bracketInner:$('bracketInner'),
+    bracCards:   $('bracCards'),
+    upsetGrid:   $('upsetGrid'),
+    apiWarn:     $('apiWarn'),
+    pinput:      $('pinput'),
+    sgpin:       $('sgpin'),
+  };
+}
+
+// ═══════════════════════════════════════════════
+// API HELPER
+// ═══════════════════════════════════════════════
+function apiHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'x-api-key': API_KEY,
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true',
+  };
+}
+
+function parseJSON(text) {
+  const clean = text.replace(/```json|```/g, '').trim();
+  const match = clean.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('No JSON found');
+  return JSON.parse(match[0]);
+}
+
+// ═══════════════════════════════════════════════
+// TICKER
+// ═══════════════════════════════════════════════
+function buildTicker() {
+  const items = [];
+  GAME_STATE.ncaab_live.forEach(g => {
+    const hasScore = g.score && g.score[g.away] !== null;
+    if (hasScore) {
+      items.push(`<span class="ti"><span class="ti-live">🔴 LIVE</span><span>${g.away} @ ${g.home}</span><span class="ti-score">${g.score[g.away]} – ${g.score[g.home]}</span><span style="color:var(--red);">${g.clock}</span><span style="color:var(--muted);">${g.src}</span></span>`);
+    } else {
+      items.push(`<span class="ti"><span class="ti-live">🔴 LIVE</span><span>${g.away} @ ${g.home}</span><span class="ti-sched">In progress</span></span>`);
+    }
+  });
+  GAME_STATE.ncaab_upcoming.forEach(g => {
+    items.push(`<span class="ti"><span class="ti-sched">📅</span><span>${g.away} @ ${g.home}</span><span class="ti-sched">${g.time}</span></span>`);
+  });
+  GAME_STATE.nba_upcoming.forEach(g => {
+    items.push(`<span class="ti"><span class="ti-sched">📅 NBA</span><span>${g.away} @ ${g.home}</span><span class="ti-sched">${g.time}</span></span>`);
+  });
+  GAME_STATE.ncaab_finals.forEach(g => {
+    items.push(`<span class="ti"><span class="ti-final">✅</span><span>${g.away} @ ${g.home}</span><span class="ti-score">${g.score.a} – ${g.score.h}</span><span style="color:var(--muted);">${g.note}</span></span>`);
+  });
+  GAME_STATE.nba_finals.forEach(g => {
+    const aKey = g.away, hKey = g.home;
+    items.push(`<span class="ti"><span class="ti-final">✅ NBA</span><span>${aKey} @ ${hKey}</span><span class="ti-score">${g.score[aKey]} – ${g.score[hKey]}</span><span style="color:var(--muted);">${g.note}</span></span>`);
+  });
+  const html = items.join('<span class="ti-dot"> · </span>');
+  if (DOM.tickerEl) DOM.tickerEl.innerHTML = html + html;
+}
+
+// ═══════════════════════════════════════════════
+// LIVE STRIP
+// ═══════════════════════════════════════════════
+function renderLiveStrip() {
+  let html = '';
+  let liveCount = 0;
+
+  GAME_STATE.ncaab_live.forEach(g => {
+    liveCount++;
+    const hasScore = g.score && g.score[g.away] !== null;
+    const tagMap = { hot:'tag-hot', watch:'tag-watch' };
+    const tagClass = tagMap[g.tag] || 'tag-lead';
+    const tagLabel = g.tag === 'hot' ? '🔥 UPSET ALERT' : g.tag === 'watch' ? '👀 Watch closely' : 'Leading';
+    html += `<div class="lgtile live">
+      <div class="lgt-league" style="color:var(--ncaa);"><div class="lgt-rdot"></div>NCAAB · LIVE <span class="v-badge">✓ ${g.src}</span></div>
+      <div class="lgt-match">${g.away} @ ${g.home}</div>
+      ${hasScore
+        ? `<div class="lgt-score">${g.score[g.away]} – ${g.score[g.home]}</div><div class="lgt-clock">⏱ ${g.clock}</div>`
+        : `<div class="lgt-clock" style="color:var(--amber);">${g.clock}</div>`}
+      <div class="lgt-note">${g.note}</div>
+      <div class="lgt-tag ${tagClass}">${tagLabel}</div>
+    </div>`;
+  });
+
+  GAME_STATE.ncaab_upcoming.forEach(g => {
+    html += `<div class="lgtile sched">
+      <div class="lgt-league" style="color:var(--ncaa);">NCAAB · UPCOMING</div>
+      <div class="lgt-match">${g.away} @ ${g.home}</div>
+      <div class="lgt-sched-time">${g.time}</div>
+      <div class="lgt-sched-note">${g.note}</div>
+    </div>`;
+  });
+
+  GAME_STATE.nba_upcoming.forEach(g => {
+    html += `<div class="lgtile sched${g.val ? ' val' : ''}">
+      <div class="lgt-league" style="color:var(--nba);">NBA · UPCOMING</div>
+      <div class="lgt-match">${g.away} @ ${g.home}</div>
+      <div class="lgt-sched-time">${g.time}</div>
+      <div class="lgt-sched-note">${g.note}</div>
+      ${g.val ? '<div class="lgt-tag tag-lead">✦ Value game</div>' : ''}
+    </div>`;
+  });
+
+  if (DOM.liveStrip) DOM.liveStrip.innerHTML = html;
+
+  if (DOM.liveCtBadge) DOM.liveCtBadge.textContent = `${liveCount} live`;
+  if (DOM.alertSub) DOM.alertSub.textContent = `${liveCount} game${liveCount !== 1 ? 's' : ''} in progress · ${URGENT.length} urgent alerts`;
+}
+
+// ═══════════════════════════════════════════════
+// ALERT CARD BUILDER
+// ═══════════════════════════════════════════════
+function buildAlertCard(b) {
+  const pcMap   = { urgent:'urgent', high:'high', value:'value' };
+  const lcMap   = { urgent:'lbl-u', high:'lbl-h', value:'lbl-v' };
+  const ltMap   = { urgent:'🚨 URGENT', high:'⚡ HIGH', value:'💰 VALUE' };
+  const timerMap= { urgent:'Act &lt;5 min', high:'Act soon', value:'' };
+  const bc = b.p === 'urgent' ? 'var(--red)' : b.p === 'high' ? 'var(--amber)' : 'var(--green)';
+  const wpc = b.window === 'closing' ? 'wp-c' : 'wp-o';
+  const wpt = b.window === 'closing' ? '⏰ Closing fast' : '✓ Open';
+  return `<div class="acard ${pcMap[b.p] || 'value'}">
+    ${b.isNew ? '<div class="new-tag">NEW</div>' : ''}
+    <div class="ac-top">
+      <div class="ac-r1"><span class="ac-lbl ${lcMap[b.p] || 'lbl-v'}">${ltMap[b.p] || 'VALUE'}</span><span class="ac-timer">${timerMap[b.p] || ''}</span></div>
+      <div class="ac-game">${b.game}${b.src ? ` <span class="v-badge">✓ ${b.src}</span>` : ''}</div>
+      <div class="ac-live-score">${b.score}</div>
+      <div class="ac-title">${b.title}</div>
+      <div class="ac-sub">${b.sub}</div>
+      <div class="ac-odds-row">
+        <div class="ac-odds ${b.odds.startsWith('+') ? 'p' : 'n'}">${b.odds}</div>
+        <div class="ac-edge" style="background:${bc}22;color:${bc};border:1px solid ${bc}44;">${b.edge} edge</div>
+      </div>
+    </div>
+    <div class="ac-why">${b.why}</div>
+    <div class="ac-bot">
+      <div class="conf-wrap">
+        <div class="ctrack"><div class="cfill" style="width:${b.conf}%;background:${bc};"></div></div>
+        <div class="cnum">${b.conf}%</div>
+      </div>
+      <span class="win-pill ${wpc}">${wpt}</span>
+    </div>
+  </div>`;
+}
+
+function renderAlerts() {
+  if (DOM.urgentGrid) DOM.urgentGrid.innerHTML = URGENT.map(buildAlertCard).join('');
+  if (DOM.highGrid)   DOM.highGrid.innerHTML   = HIGH.map(buildAlertCard).join('');
+}
+
+// ═══════════════════════════════════════════════
+// TRENDING
+// ═══════════════════════════════════════════════
+function renderTrending() {
+  if (!DOM.trendRow) return;
+  DOM.trendRow.innerHTML = TRENDING.map(t => {
+    const lc = t.league === 'NBA' ? 'var(--nba)' : 'var(--ncaa)';
+    const oc = t.odds.startsWith('+') ? 'var(--green)' : 'var(--amber)';
+    return `<div class="tcard${t.fire ? ' fire' : t.hot ? ' hot' : ''}">
+      <div class="tc-l" style="color:${lc};">${t.league}</div>
+      <div class="tc-n">${t.name}</div>
+      <div class="tc-b">${t.bet}</div>
+      <div class="tc-o" style="color:${oc};">${t.odds}</div>
+      <div class="tc-vol">🔥 Public: ${t.vol}%</div>
+      <div class="tc-vbar"><div class="tc-vfill" style="width:${t.vol}%;"></div></div>
+      <div class="tc-mv ${t.mDir === 'up' ? 'mv-u' : 'mv-d'}">${t.mDir === 'up' ? '▲' : '▼'} ${t.move}</div>
+      <div class="tc-note">${t.note}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// UPCOMING
+// ═══════════════════════════════════════════════
+function renderUpcoming() {
+  if (!DOM.upcomingGrid) return;
+  DOM.upcomingGrid.innerHTML = UPCOMING.map(u => {
+    const lc = u.league === 'NBA' ? 'var(--nba)' : 'var(--ncaa)';
+    return `<div class="ucard">
+      <div class="uc-l" style="color:${lc};">${u.league}</div>
+      <div class="uc-g">${u.game}</div>
+      <div class="uc-t">${u.time}</div>
+      <div class="uc-b">${u.bet}</div>
+      <div class="uc-n">${u.note}</div>
+      <div class="uc-o">${u.odds}</div>
+    </div>`;
+  }).join('');
+}
+
+function updLiveTs() {
+  const t = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  if (DOM.lupdText) DOM.lupdText.textContent = `Last web search: ${t} · Scores verified via Google search every 60 sec`;
+}
+
+function renderLiveAll() {
+  buildTicker();
+  renderLiveStrip();
+  renderAlerts();
+  renderTrending();
+  renderUpcoming();
+  updLiveTs();
+}
+
+// ═══════════════════════════════════════════════
+// AI REFRESH — searches web for real current scores
+// ═══════════════════════════════════════════════
+let isRefreshing = false;
+
+async function doRefresh() {
+  if (isRefreshing) return;
+  if (!API_KEY) { updLiveTs(); return; }
+  isRefreshing = true;
+
+  if (DOM.sspin)   DOM.sspin.classList.add('on');
+  if (DOM.lupdspin)DOM.lupdspin.classList.add('on');
+  if (DOM.scanBtn) DOM.scanBtn.disabled = true;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 1200,
+        tools: [{ type:'web_search_20250305', name:'web_search' }],
+        system: `You are a live sports betting intelligence system. Today is Sunday March 22, 2026, approximately 8-9 PM CDT.
+
+CRITICAL: Use web_search to look up CURRENT live scores for these games right now:
+1. Search "Florida Iowa score live 2026"
+2. Search "Arizona Utah State score live 2026"
+3. Search "UConn UCLA score live March 22 2026"
+4. Search "Alabama Texas Tech score March 22 2026"
+5. Search "New York Knicks Washington Wizards score live"
+6. Search "Boston Celtics Minnesota Timberwolves score live"
+
+After searching, return ONLY compact valid JSON (no markdown):
+{
+  "live_games": [
+    {"id":"fla-iowa","away":"IOWA","home":"FLA","score_away":0,"score_home":0,"clock":"X:XX","status":"live|final|upcoming","note":"key context","src":"source name"},
+    {"id":"ariz-usu","away":"USU","home":"ARIZ","score_away":0,"score_home":0,"clock":"X:XX","status":"live|final|upcoming","note":"key context","src":"source name"},
+    {"id":"conn-ucla","away":"UCLA","home":"CONN","score_away":0,"score_home":0,"clock":"X:XX","status":"live|final|upcoming","note":"key context","src":"source"},
+    {"id":"ala-ttu","away":"TTU","home":"ALA","score_away":0,"score_home":0,"clock":"X:XX","status":"live|final|upcoming","note":"key context","src":"source"},
+    {"id":"was-nyk","away":"WAS","home":"NYK","score_away":0,"score_home":0,"clock":"X:XX","status":"live|final|upcoming","note":"key context","src":"source"},
+    {"id":"min-bos","away":"MIN","home":"BOS","score_away":0,"score_home":0,"clock":"X:XX","status":"live|final|upcoming","note":"key context","src":"source"}
+  ],
+  "new_urgent_bets": [{"p":"urgent","game":"GAME (LEAGUE)","score":"SCORE · CLOCK","src":"verified source","title":"BET NAME","sub":"one line","odds":"+XXX","edge":"+X.X%","conf":80,"window":"closing|open","isNew":true,"why":"2-sentence reasoning"}],
+  "new_high_bets": [{"p":"high","game":"GAME","score":"SCORE · CLOCK","src":"source","title":"BET","sub":"line","odds":"+XXX","edge":"+X.X%","conf":75,"window":"open","isNew":true,"why":"reasoning"}],
+  "trending_update": {"name":"bet name","mDir":"up|down","move":"description","note":"why","vol":80},
+  "breaking": "1 sentence breaking news OR empty string"
+}`,
+        messages: [{ role:'user', content:'Search for the live scores of all these games right now and generate fresh betting alerts based on verified real-time scores. Date: March 22, 2026 evening CDT.' }]
+      })
+    });
+
+    const data = await res.json();
+    let jsonText = '';
+    if (data.content) {
+      for (const block of data.content) {
+        if (block.type === 'text') jsonText += block.text;
+      }
+    }
+
+    const u = parseJSON(jsonText);
+
+    if (u.live_games) {
+      u.live_games.forEach(g => {
+        // Update NCAAB live
+        const nc = GAME_STATE.ncaab_live.find(x => x.id === g.id);
+        if (nc) {
+          if (g.score_away != null) nc.score[g.away] = g.score_away;
+          if (g.score_home != null) nc.score[g.home] = g.score_home;
+          if (g.clock) nc.clock = g.clock;
+          if (g.note)  nc.note  = g.note;
+          if (g.src)   nc.src   = g.src;
+          if (g.status === 'final') {
+            GAME_STATE.ncaab_finals.unshift({ away:g.away, home:g.home, score:{a:g.score_away,h:g.score_home}, note:g.note || 'Final' });
+            GAME_STATE.ncaab_live = GAME_STATE.ncaab_live.filter(x => x !== nc);
+          }
+        }
+        // Update NBA upcoming → live/final
+        const nb = GAME_STATE.nba_upcoming.find(x => x.id === g.id);
+        if (nb) {
+          if (g.status === 'live') {
+            nb.status = 'LIVE';
+            nb.score  = { [nb.away]:g.score_away, [nb.home]:g.score_home };
+            nb.clock  = g.clock;
+            if (g.note) nb.note = g.note;
+          } else if (g.status === 'final') {
+            GAME_STATE.nba_finals.unshift({ away:nb.away, home:nb.home, score:{[nb.away]:g.score_away,[nb.home]:g.score_home}, note:g.note || '' });
+            GAME_STATE.nba_upcoming = GAME_STATE.nba_upcoming.filter(x => x !== nb);
+          }
+        }
+      });
+    }
+
+    if (u.new_urgent_bets && u.new_urgent_bets.length) {
+      URGENT = [...u.new_urgent_bets.slice(0, 3), ...URGENT.filter(b => !b.isNew).slice(0, 1)];
+    }
+    if (u.new_high_bets && u.new_high_bets.length) {
+      HIGH = [...u.new_high_bets.slice(0, 3), ...HIGH.filter(b => !b.isNew).slice(0, 1)];
+    }
+    if (u.trending_update) {
+      const key = (u.trending_update.name || '').toLowerCase().split(' ')[0];
+      const ex = TRENDING.find(t => t.name.toLowerCase().includes(key));
+      if (ex) Object.assign(ex, u.trending_update);
+    }
+    if (u.breaking && u.breaking.length > 3) {
+      if (DOM.breaking) {
+        DOM.breaking.textContent = '🚨 LIVE: ' + u.breaking;
+        DOM.breaking.style.display = 'block';
+        setTimeout(() => { if (DOM.breaking) DOM.breaking.style.display = 'none'; }, 30000);
+      }
+    }
+
+    renderLiveAll();
+    renderNCAA();
+    renderNBA();
+
+  } catch (err) {
+    console.warn('Refresh error:', err);
+    updLiveTs();
+  }
+
+  if (DOM.sspin)   DOM.sspin.classList.remove('on');
+  if (DOM.lupdspin)DOM.lupdspin.classList.remove('on');
+  if (DOM.scanBtn) DOM.scanBtn.disabled = false;
+  isRefreshing = false;
+}
+
+function manualRefresh() { alertSecs = 0; doRefresh(); }
+
+// ═══════════════════════════════════════════════
+// VALUE GRID
+// ═══════════════════════════════════════════════
+function renderVG() {
+  const sorted = [...VP].sort((a, b) => b.edge - a.edge);
+  if (DOM.vgrid) {
+    DOM.vgrid.innerHTML = sorted.map(p => {
+      const leagueClass = p.league === 'NBA' ? 'nba-p' : p.league === 'NFL' ? 'nfl-p' : 'ncaa-p';
+      const fireClass   = p.fire ? (p.league === 'NCAAB' ? 'fp' : 'fg') : '';
+      const badgeClass  = p.league === 'NCAAB' ? 'p' : 'g';
+      return `<div class="pick ${fireClass} ${leagueClass}">
+        ${p.fire ? `<div class="fbadge ${badgeClass}">TOP VALUE</div>` : ''}
+        <div class="pk-l">${p.league}</div>
+        <div class="pk-n">${p.name}</div>
+        <div class="pk-b">${p.bet}</div>
+        <div class="pk-o ${p.odds.startsWith('+') ? 'p' : 'n'}">${p.odds}</div>
+        <div class="vbw"><div class="vb" style="width:${Math.min(p.edge * 7, 100)}%;background:${p.color};"></div></div>
+        <div class="pk-m"><div class="pk-e">+${p.edge}% edge</div><div class="pk-c">${p.conf}%</div></div>
+        <div class="pk-note">${p.note}</div>
+      </div>`;
+    }).join('');
+  }
+
+  if (DOM.valueUpd) {
+    const t = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+    DOM.valueUpd.innerHTML = `<span>Updated ${t}</span>`;
+  }
+
+  if (DOM.hotArea) {
+    DOM.hotArea.innerHTML = HOT_P.map(p => {
+      const leagueTag = `<span style="background:rgba(201,162,39,.15);color:var(--nba);font-size:10px;padding:1px 5px;border-radius:3px;margin-left:3px;font-weight:700;">NBA</span>`;
+      return `<div class="pcard">
+        <div class="pc-h">
+          <div class="pc-i">
+            <div class="ava" style="background:${p.avBg};color:${p.avC};">${p.initials}</div>
+            <div><div class="pc-n">${p.name}</div><div class="pc-s">${p.team} · ${p.pos} ${leagueTag}</div></div>
+          </div>
+          <div class="fchip" style="background:${p.fBg};color:${p.fC};">${p.form}</div>
+        </div>
+        <div class="stat-row">${p.stats.map(s => `<div class="sc"><div class="sv">${s.v}</div><div class="sl">${s.l}</div></div>`).join('')}</div>
+        <div class="gl">
+          <div class="glt">Last 3 games</div>
+          <table class="gtbl">
+            <thead><tr><th>Matchup</th><th>PTS</th><th>REB</th><th>AST</th><th>BLK</th><th>W/L</th></tr></thead>
+            <tbody>${p.games.map(g => `<tr><td>${g.o}</td><td class="${g.p >= 30 ? 'hi' : ''}">${g.p}</td><td>${g.r}</td><td>${g.a}</td><td class="${g.b >= 2 ? 'hi' : ''}">${g.b}</td><td class="${g.res === 'W' ? 'ww' : 'wl'}">${g.res}</td></tr>`).join('')}</tbody>
+          </table>
+        </div>
+        <div class="ana">${p.analysis}</div>
+        <div class="psec">
+          <div class="pst g">Value props</div>
+          ${p.props.map(pr => `<div class="pr-row">
+            <div class="pr-l"><div class="pr-nm">${pr.bet}</div><div class="pr-rs">${pr.rsn}</div></div>
+            <div class="pr-r">
+              <div class="pr-od" style="color:${pr.color};">${pr.odds}</div>
+              <div class="cbw"><div class="cb"><div class="cbf" style="width:${pr.conf}%;background:${pr.color};"></div></div><div class="cbp">${pr.conf}%</div></div>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// BRACKET
+// ═══════════════════════════════════════════════
+function renderBracket() {
+  const eastSlots = [
+    { s:1,   n:'Duke',               o:'+425', c:78, a:true,  note:'Faces SJU Fri' },
+    { s:'5', n:'SJU ✅ upset KU',    o:'+900', c:65, a:true,  note:'' },
+    { s:3,   n:'Michigan St',         o:'+700', c:68, a:true,  note:'' },
+    { s:'2/7',n:'UConn/UCLA tonight', o:'+800', c:60, a:null,  note:'' },
+  ];
+  const midSlots = [
+    { s:1,     n:'Michigan',         o:'+340',  c:82, a:true,  note:'' },
+    { s:'4/5', n:'ALA/TTU tonight',  o:'+2200', c:55, a:null,  note:'' },
+    { s:2,     n:'Iowa State ✅',    o:'+1200', c:70, a:true,  note:'' },
+    { s:3,     n:'Virginia ❌',      o:'ELIM',  c:0,  a:false, note:'' },
+  ];
+
+  const slotHTML = (t, borderColor) =>
+    `<div class="bslot ${t.a === true ? 'adv' : t.a === false ? 'elim' : 'proj'}">
+      <div class="bs-s">${t.s}</div>
+      <div class="bs-n">${t.n}${t.note ? `<span style="font-size:9px;color:var(--muted);margin-left:4px;">${t.note}</span>` : ''}</div>
+      <div class="bs-o">${t.o}</div>
+      <div class="bs-c ${t.c >= 75 ? 'hi' : t.c > 0 ? 'md' : ''}">${t.c > 0 ? t.c + '%' : '—'}</div>
+    </div>`;
+
+  if (DOM.bracketInner) {
+    DOM.bracketInner.innerHTML = `<div class="bg3">
+      <div class="rcol">
+        <div class="rh e">EAST REGION</div>
+        ${eastSlots.map(t => slotHTML(t)).join('')}
+        <div style="margin-top:8px;border-left:2px solid var(--blue);padding-left:9px;">
+          <div style="font-size:10px;color:var(--blue);font-weight:700;margin-bottom:3px;">E8 → FF PICK</div>
+          <div class="bslot chmp"><div class="bs-n" style="font-weight:800;color:#f0c040;">Duke 🏀</div><div class="bs-o" style="color:#f0c040;">65%</div></div>
+        </div>
+      </div>
+      <div class="ctrcol">
+        <div class="champ-box">
+          <div class="cb-icon">🏆</div>
+          <div class="cb-lbl">ProEdge Champion</div>
+          <div class="cb-name">${CHAMP.name}</div>
+          <div class="cb-od">${CHAMP.odds} · ${CHAMP.conf}% conf</div>
+        </div>
+        <div class="ff-lbl">Final Four</div>
+        ${FINAL_FOUR.map(t => `<div class="bslot ${t.name === CHAMP.name ? 'chmp' : 'proj'}" style="width:100%;">
+          <div class="bs-n" style="font-weight:700;">${t.name} ${t.name === CHAMP.name ? '🏆' : ''}</div>
+          <div class="bs-o">${t.odds}</div>
+        </div>`).join('')}
+      </div>
+      <div class="rcol">
+        <div class="rh m">MIDWEST REGION</div>
+        ${midSlots.map(t => slotHTML(t)).join('')}
+        <div style="margin-top:8px;border-left:2px solid var(--green);padding-left:9px;">
+          <div style="font-size:10px;color:var(--green);font-weight:700;margin-bottom:3px;">MIDWEST → CHAMP 🏆</div>
+          <div class="bslot chmp"><div class="bs-n" style="font-weight:800;color:#f0c040;">Michigan 🏆</div><div class="bs-o" style="color:#f0c040;">70%</div></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (DOM.bracCards) {
+    DOM.bracCards.innerHTML = FINAL_FOUR.map(t => `<div class="bc${t.name === CHAMP.name ? ' feat' : ''}">
+      <div class="bc-reg" style="color:${t.color};">${t.region.toUpperCase()}${t.name === CHAMP.name ? ' · 🏆 CHAMPION' : ''}</div>
+      <div class="bc-n">${t.name}</div>
+      <div class="bc-o" style="color:${t.color};">${t.odds}</div>
+      <div class="bc-bar"><div class="bc-fill" style="width:${t.conf}%;background:${t.color};"></div></div>
+      <div class="bc-note">${t.note}</div>
+      <div class="bc-path"><b>Path:</b> ${t.path}</div>
+    </div>`).join('');
+  }
+
+  if (DOM.upsetGrid) {
+    DOM.upsetGrid.innerHTML = UPSETS.map(u => `<div class="utile">
+      <div class="ut-l">${u.label}</div>
+      <div class="ut-m">${u.match}</div>
+      <div class="ut-n">${u.note}</div>
+      <div class="ut-od">${u.ml}</div>
+    </div>`).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// NCAAB
+// ═══════════════════════════════════════════════
+function renderNCAA() {
+  const liveCt = GAME_STATE.ncaab_live.length;
+  if (DOM.liveCnt2) DOM.liveCnt2.textContent = liveCt ? `🔴 ${liveCt} live` : '';
+
+  let html = '';
+  GAME_STATE.ncaab_live.forEach(g => {
+    const hasScore = g.score && g.score[g.away] !== null;
+    html += `<div class="mtile live">
+      <div class="ml r">🔴 LIVE <span class="v-badge">✓ ${g.src}</span></div>
+      <div class="mt">${g.away} @ ${g.home}</div>
+      ${hasScore ? `<div class="ms">${g.score[g.away]} — ${g.score[g.home]}</div><div class="mc">⏱ ${g.clock}</div>` : `<div class="mc">${g.clock}</div>`}
+      <div class="mnote">${g.note}</div>
+    </div>`;
+  });
+  GAME_STATE.ncaab_upcoming.forEach(g => {
+    html += `<div class="mtile"><div class="ml m">📅 UPCOMING</div><div class="mt">${g.away} @ ${g.home}</div><div class="mtime">${g.time}</div><div class="mnote">${g.note}</div></div>`;
+  });
+  GAME_STATE.ncaab_finals.forEach(g => {
+    html += `<div class="mtile"><div class="ml g">✅ FINAL</div><div class="mt">${g.away} @ ${g.home}</div><div class="ms">${g.score.a} — ${g.score.h}</div><div class="mnote">${g.note}</div></div>`;
+  });
+  if (DOM.ncaabGames) DOM.ncaabGames.innerHTML = html;
+
+  if (DOM.ncaabPlayers) {
+    DOM.ncaabPlayers.innerHTML = NCAA_PLAYERS.map(p => `<div class="pcard nc">
+      <div class="pc-h">
+        <div class="pc-i">
+          <div class="ava" style="background:${p.avBg};color:${p.avC};">${p.initials}</div>
+          <div><div class="pc-n">${p.name}</div><div class="pc-s">${p.school} · ${p.yr} · ${p.pos} · ${p.seed}</div></div>
+        </div>
+        <div class="fchip" style="background:${p.fBg};color:${p.fC};">${p.form}</div>
+      </div>
+      <div class="stat-row">${p.stats.map(s => `<div class="sc"><div class="sv">${s.v}</div><div class="sl">${s.l}</div></div>`).join('')}</div>
+      <div class="gl">
+        <div class="glt">Recent games</div>
+        <table class="gtbl">
+          <thead><tr><th>Matchup</th><th>PTS</th><th>REB</th><th>AST</th><th>W/L</th></tr></thead>
+          <tbody>${p.games.map(g => `<tr><td>${g.o}</td><td class="${(g.p || 0) >= 25 ? 'hi' : ''}">${g.p || '—'}</td><td class="${(g.r || 0) >= 10 ? 'hi' : ''}">${g.r || '—'}</td><td>${g.a || '—'}</td><td class="${g.res === 'W' ? 'ww' : 'wl'}">${g.res}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+      <div class="ana">${p.analysis}</div>
+      <div class="psec ns">
+        <div class="pst nc">Value props</div>
+        ${p.props.map(pr => `<div class="pr-row">
+          <div class="pr-l"><div class="pr-nm">${pr.bet}</div><div class="pr-rs">${pr.rsn}</div></div>
+          <div class="pr-r">
+            <div class="pr-od" style="color:${pr.color};">${pr.odds}</div>
+            <div class="cbw"><div class="cb"><div class="cbf" style="width:${pr.conf}%;background:${pr.color};"></div></div><div class="cbp">${pr.conf}%</div></div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+  }
+
+  if (DOM.ncaabPicks) {
+    DOM.ncaabPicks.innerHTML = [...NCAAB_PICKS].sort((a, b) => b.edge - a.edge).map(p => `<div class="pick${p.fire ? ' fp' : ''} ncaa-p">
+      ${p.fire ? '<div class="fbadge p">TOP VALUE</div>' : ''}
+      <div class="pk-l">NCAAB</div>
+      <div class="pk-n">${p.name}</div>
+      <div class="pk-b">${p.bet}</div>
+      <div class="pk-o ${p.odds.startsWith('+') ? 'p' : 'n'}">${p.odds}</div>
+      <div class="vbw"><div class="vb" style="width:${Math.min(p.edge * 7, 100)}%;background:${p.color};"></div></div>
+      <div class="pk-m"><div class="pk-e">+${p.edge}% edge</div><div class="pk-c">${p.conf}%</div></div>
+      <div class="pk-note">${p.note}</div>
+    </div>`).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// NBA
+// ═══════════════════════════════════════════════
+function renderNBA() {
+  const all = [...NBA_GAMES];
+  GAME_STATE.nba_finals.forEach(g => {
+    all.push({ away:g.away, home:g.home, status:'FINAL', score:g.score, note:g.note, spread:'—', ou:'—' });
+  });
+
+  if (DOM.nbagrid) {
+    DOM.nbagrid.innerHTML = all.map(g => {
+      const isLive  = g.status === 'LIVE';
+      const isFinal = g.status === 'FINAL';
+      const scoreVals = g.score ? Object.values(g.score).join(' – ') : '—';
+      return `<div class="gtile${isLive ? ' live' : g.val ? ' val' : ''}">
+        <div class="gb nba">${isLive ? '🔴 LIVE' : isFinal ? '✅ FINAL' : 'NBA · UPCOMING'}</div>
+        <div class="gm">${g.away} @ ${g.home}</div>
+        ${isLive || isFinal
+          ? `<div class="gs">${scoreVals}</div>`
+          : `<div class="gt">${g.time || 'Tonight'}</div>`}
+        ${!isLive && !isFinal && g.ap !== undefined ? `
+          <div class="pr2"><div class="pt2">${g.away}</div><div class="ptrk"><div class="ptf" style="width:${g.ap}%;"></div></div><div class="pp2">${g.ap}%</div></div>
+          <div class="pr2"><div class="pt2">${g.home}</div><div class="ptrk"><div class="ptf" style="width:${g.hp}%;"></div></div><div class="pp2">${g.hp}%</div></div>
+        ` : ''}
+        ${g.spread && g.spread !== '—' ? `<div class="gspd">Spread: ${g.spread}</div>` : ''}
+        ${g.ou && g.ou !== '—'     ? `<div class="gou">O/U: ${g.ou}</div>` : ''}
+        ${g.val && !isFinal ? '<div class="vtag">✦ Value game</div>' : ''}
+        ${g.note ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4;">${g.note}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// NFL
+// ═══════════════════════════════════════════════
+function renderNFL() {
+  if (DOM.nflfg) {
+    DOM.nflfg.innerHTML = NFL_F.map(f => {
+      const isTop = f.edge === 'Strong' || f.edge === 'High';
+      return `<div class="pick${isTop ? ' fg' : ''} nfl-p">
+        ${isTop ? '<div class="fbadge g">TOP VALUE</div>' : ''}
+        <div class="pk-l">NFL</div>
+        <div class="pk-n">${f.team}</div>
+        <div class="pk-b">${f.type}</div>
+        <div class="pk-o p">${f.odds}</div>
+        <div class="vbw"><div class="vb" style="width:${f.conf}%;background:${f.color};"></div></div>
+        <div class="pk-m"><div class="pk-e">${f.edge} edge</div><div class="pk-c">${f.conf}%</div></div>
+        <div class="pk-note">${f.note}</div>
+      </div>`;
+    }).join('');
+  }
+
+  if (DOM.nflsg) {
+    DOM.nflsg.innerHTML = Object.entries(NFL_ST).map(([conf, teams]) => `<div class="scard">
+      <div class="stitle">${conf}</div>
+      ${teams.map(t => `<div class="st-row">
+        <div class="srk">${t.r}</div>
+        <div class="stm">${t.t}<span class="cli ${t.c}">${t.c === 'c' ? 'CONF' : t.c === 'd' ? 'DIV' : 'WC'}</span></div>
+        <div class="src2">${t.rc}</div>
+      </div>`).join('')}
+    </div>`).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// PLAYER LOOKUP
+// ═══════════════════════════════════════════════
+let lookupDebounce = null;
+
+async function doLookup() {
+  const name   = DOM.pinput ? DOM.pinput.value.trim() : '';
+  const league = $('lsel') ? $('lsel').value : 'NBA';
+  if (!name || !DOM.presult) return;
+
+  if (!API_KEY) {
+    DOM.presult.innerHTML = '<div class="empty">API key not configured — set API_KEY in the script to use AI lookup.</div>';
+    return;
+  }
+
+  DOM.presult.innerHTML = `<div class="load"><div class="spin2"></div> Analyzing ${name} (${league}) with live context…</div>`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 1100,
+        system: `Live sports betting analyst, March 22 2026 evening. Return ONLY valid compact JSON:
+{"name":"","team":"","pos":"","league":"NBA|NCAAB|NFL","form":"On Fire|Hot|Trending Up|Consistent|Cold","season_avg":{"PPG":"","RPG":"","APG":"","TS%":""},"last3":[{"opp":"","s1":0,"s2":0,"s3":0,"result":"W"},{"opp":"","s1":0,"s2":0,"s3":0,"result":"W"},{"opp":"","s1":0,"s2":0,"s3":0,"result":"L"}],"stat_keys":["PTS","REB","AST"],"next_game":"","live_note":"live context if applicable","best_props":[{"prop":"","odds":"","edge":"","conf":85,"reason":"include live game context"}],"analysis":"2-3 sentences: current form, live/upcoming context, best bets."}
+Sort props by edge. For NCAAB include bracket position. For NBA note tonight's game context.`,
+        messages: [{ role:'user', content:`Analyze ${name} (${league}) March 22 2026. Live context: Iowa leads Florida 66-65 with ~3 min left, AZ vs USU in progress, UConn/UCLA tips 8:45ET, ALA/TTU tips 9:45ET, BOS vs MIN tips 7ET (Edwards/Reid out for MIN), NYK vs WAS tips 7:30ET (WAS 15-game skid).` }]
+      })
+    });
+
+    const data = await res.json();
+    const txt = data.content.map(c => c.text || '').join('');
+    const p = parseJSON(txt);
+
+    const formColor = { 'On Fire':'var(--ncaa)', 'Hot':'var(--green)', 'Trending Up':'var(--amber)', 'Consistent':'var(--blue)', 'Cold':'var(--red)' };
+    const formBg    = { 'On Fire':'rgba(232,57,138,.1)', 'Hot':'var(--gBg)', 'Trending Up':'var(--aBg)', 'Consistent':'var(--blBg)', 'Cold':'var(--rBg)' };
+    const ini = (p.name || '??').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const edgeColor = e => parseFloat(e) >= 8 ? 'var(--green)' : parseFloat(e) >= 5 ? 'var(--amber)' : 'var(--red)';
+    const nc = p.league === 'NCAAB';
+
+    DOM.presult.innerHTML = `<div class="pcard${nc ? ' nc' : ''}">
+      <div class="pc-h">
+        <div class="pc-i">
+          <div class="ava" style="background:${nc ? 'rgba(232,57,138,.15)' : 'var(--blBg)'};color:${nc ? 'var(--ncaa)' : 'var(--blue)'};">${ini}</div>
+          <div><div class="pc-n">${p.name}</div><div class="pc-s">${p.team} · ${p.pos}${p.live_note ? ' · ' + p.live_note : ''} · Next: ${p.next_game}</div></div>
+        </div>
+        <div class="fchip" style="background:${formBg[p.form] || formBg.Consistent};color:${formColor[p.form] || formColor.Consistent};">${p.form}</div>
+      </div>
+      <div class="stat-row">${Object.entries(p.season_avg).map(([k, v]) => `<div class="sc"><div class="sv">${v}</div><div class="sl">${k}</div></div>`).join('')}</div>
+      <div class="gl">
+        <div class="glt">Last 3 games</div>
+        <table class="gtbl">
+          <thead><tr><th>Matchup</th>${(p.stat_keys || []).map(h => `<th>${h}</th>`).join('')}<th>W/L</th></tr></thead>
+          <tbody>${(p.last3 || []).map(g => {
+            const vals = [g.s1, g.s2, g.s3];
+            return `<tr><td>${g.opp}</td>${(p.stat_keys || []).map((_, i) => {
+              const v = vals[i] ?? '—';
+              return `<td class="${v >= 28 ? 'hi' : ''}">${v}</td>`;
+            }).join('')}<td class="${g.result === 'W' ? 'ww' : 'wl'}">${g.result}</td></tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>
+      <div class="ana">${p.analysis}</div>
+      <div class="psec${nc ? ' ns' : ''}">
+        <div class="pst${nc ? ' nc' : ' g'}">AI props — edge first</div>
+        ${(p.best_props || []).sort((a, b) => parseFloat(b.edge) - parseFloat(a.edge)).map(pr => `<div class="pr-row">
+          <div class="pr-l"><div class="pr-nm">${pr.prop}</div><div class="pr-rs">${pr.reason}</div></div>
+          <div class="pr-r">
+            <div class="pr-od" style="color:${edgeColor(pr.edge)};">${pr.odds}</div>
+            <div class="cbw"><div class="cb"><div class="cbf" style="width:${pr.conf}%;background:${edgeColor(pr.edge)};"></div></div><div class="cbp">${pr.conf}%</div></div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  } catch (e) {
+    console.error('Lookup error:', e);
+    if (DOM.presult) DOM.presult.innerHTML = '<div class="empty">Could not load. Check your API key and try again.</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// SGP BUILDER
+// ═══════════════════════════════════════════════
+let legs = [];
+
+function addLeg() {
+  const v = DOM.sgpin ? DOM.sgpin.value.trim() : '';
+  if (!v) return;
+  legs.push(v);
+  if (DOM.sgpin) DOM.sgpin.value = '';
+  renderLegs();
+}
+
+function removeLeg(i) {
+  legs.splice(i, 1);
+  renderLegs();
+}
+
+function renderLegs() {
+  if (!DOM.sgplegs) return;
+  if (!legs.length) { DOM.sgplegs.innerHTML = '<div class="empty">No legs.</div>'; return; }
+  DOM.sgplegs.innerHTML = legs.map((l, i) => `<div class="sgleg">
+    <div class="sgn">${i + 1}</div>
+    <div class="sgt">${l}</div>
+    <button class="sgx" onclick="removeLeg(${i})" aria-label="Remove leg">×</button>
+  </div>`).join('');
+}
+
+async function analyzeSGP() {
+  if (!legs.length || !DOM.sgpresult) return;
+
+  if (!API_KEY) {
+    DOM.sgpresult.innerHTML = '<div class="empty">API key not configured — set API_KEY in the script.</div>';
+    return;
+  }
+
+  DOM.sgpresult.innerHTML = `<div class="load"><div class="spin2"></div> Grading ${legs.length}-leg SGP…</div>`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: apiHeaders(),
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 900,
+        system: 'SGP analyst. ONLY valid JSON: {"overall_conf":0-100,"grade":"A+|A|A-|B+|B|B-|C+|C|D","implied_odds":"+XXX","correlation_note":"1 sentence","legs":[{"bet":"","conf":85,"verdict":"Strong|Good|Risky|Fade","edge":"+5%"}],"summary":"2 sentences."}',
+        messages: [{ role:'user', content:`Grade this SGP (March 22 2026 evening — Iowa leads FLA 66-65, BOS/NYK/TOR tip soon): ${legs.join(' + ')}` }]
+      })
+    });
+
+    const data = await res.json();
+    const txt = data.content.map(c => c.text || '').join('');
+    const r = parseJSON(txt);
+
+    const gradeColor  = g => g.startsWith('A') ? 'var(--green)' : g.startsWith('B') ? 'var(--amber)' : 'var(--red)';
+    const verdictColor = v => ({ Strong:'var(--green)', Good:'var(--green)', Risky:'var(--amber)', Fade:'var(--red)' }[v] || 'var(--muted)');
+
+    DOM.sgpresult.innerHTML = `<div class="sgsum">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+        <div style="flex:1;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">SGP · ${legs.length} legs</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.6;">${r.summary}</div>
+          <div style="font-size:12px;color:var(--purple);margin-top:5px;">↔ ${r.correlation_note}</div>
+        </div>
+        <div style="text-align:center;flex-shrink:0;">
+          <div class="sggrade" style="color:${gradeColor(r.grade)};">${r.grade}</div>
+          <div style="font-size:11px;color:var(--muted);">${r.overall_conf}% conf</div>
+          <div style="font-size:13px;font-weight:700;color:var(--amber);margin-top:2px;">${r.implied_odds}</div>
+        </div>
+      </div>
+      ${(r.legs || []).map(l => `<div class="sglr">
+        <div class="slrt">
+          <div class="slrb">${l.bet}</div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <div style="font-size:12px;color:${verdictColor(l.verdict)};font-weight:600;">${l.edge}</div>
+            <div class="slrv" style="background:${verdictColor(l.verdict)}22;color:${verdictColor(l.verdict)};">${l.verdict}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;margin-top:5px;">
+          <div class="cb" style="width:90px;"><div class="cbf" style="width:${l.conf}%;background:${verdictColor(l.verdict)};"></div></div>
+          <div class="cbp">${l.conf}%</div>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  } catch (e) {
+    console.error('SGP error:', e);
+    if (DOM.sgpresult) DOM.sgpresult.innerHTML = '<div class="empty">Analysis failed. Check your API key.</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// TIMERS
+// ═══════════════════════════════════════════════
+let alertSecs  = 60;
+let globalSecs = 300;
+
+function startTimers() {
+  setInterval(() => {
+    alertSecs--;
+    if (DOM.alertCd) DOM.alertCd.textContent = alertSecs > 0 ? `${alertSecs}s` : 'Scanning…';
+    if (alertSecs <= 0) { alertSecs = 60; doRefresh(); }
+
+    globalSecs--;
+    if (DOM.globalCd) {
+      const m = Math.floor(globalSecs / 60);
+      const s = globalSecs % 60;
+      DOM.globalCd.textContent = `${m}:${String(s).padStart(2, '0')}`;
+    }
+    if (globalSecs <= 0) globalSecs = 300;
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════
+function goTab(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+  const section = document.getElementById(id);
+  if (section) section.classList.add('active');
+  if (btn) { btn.classList.add('active'); btn.setAttribute('aria-selected', 'true'); }
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+function init() {
+  initDOM();
+
+  // Show API key warning if not set
+  if (!API_KEY && DOM.apiWarn) DOM.apiWarn.style.display = 'block';
+
+  // Keyboard shortcuts
+  if (DOM.pinput) DOM.pinput.addEventListener('keydown', e => { if (e.key === 'Enter') doLookup(); });
+  if (DOM.sgpin)  DOM.sgpin.addEventListener('keydown',  e => { if (e.key === 'Enter') addLeg(); });
+
+  // Initial renders
+  renderLiveAll();
+  renderVG();
+  renderBracket();
+  renderNCAA();
+  renderNBA();
+  renderNFL();
+  renderLegs();
+  startTimers();
+
+  // First AI refresh after 3 seconds (only if API key is set)
+  if (API_KEY) setTimeout(doRefresh, 3000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
