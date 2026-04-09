@@ -546,126 +546,35 @@ const MODEL   = 'claude-sonnet-4-6';
 // ═══════════════════════════════════════════════
 
 let GAME_STATE = {
-  nba_live: [],
-  nba_upcoming: [
-    { id:'was-nyk', away:'WAS', home:'NYK', time:'7:30 PM ET', spread:'NYK -18+', ou:'219',   winP:{NYK:96,WAS:4},  note:'Brunson 26.2 PPG. WAS 15-game losing streak. Champagnie ejection Saturday could affect status.', val:true },
-    { id:'min-bos', away:'MIN', home:'BOS', time:'7:00 PM ET', spread:'BOS -9.5', ou:'219.5', winP:{BOS:78,MIN:22}, note:'Edwards (knee) and Reid (ankle) out for MIN. BOS 4-game win streak. Jaylen Brown 30pts Friday.',   val:true },
-    { id:'tor-phx', away:'TOR', home:'PHX', time:'8:00 PM ET', spread:'TOR -2.5', ou:'227',   winP:{TOR:61,PHX:39}, note:'TOR slight favorite. Booker assist prop value.',                                                   val:false },
-  ],
-  nba_finals: [
-    { away:'POR', home:'DEN', score:{POR:112,DEN:128}, note:'Jokic 35th TD of season · Peyton Watson returns' },
-    { away:'BKN', home:'SAC', score:{BKN:122,SAC:126}, note:'SAC edges BKN in close one' },
-  ],
-  ncaab_live: [
-    { id:'fla-iowa', away:'IOWA', home:'FLA',  score:{IOWA:66,FLA:65},  clock:'3:25',       note:'🔥 IOWA leads #1 Florida! Stirtz cooking — upset alert!', tag:'hot',   src:'Yahoo Sports' },
-    { id:'ariz-usu', away:'USU',  home:'ARIZ', score:{USU:null,ARIZ:null}, clock:'IN PROGRESS', note:'AZ -11.5 fav. Tipped 7:50 PM ET. USU upset-capable (beat Villanova R1).', tag:'watch', src:'ESPN' },
-  ],
-  ncaab_upcoming: [
-    { away:'UCLA', home:'CONN', time:'8:45 PM ET', note:'Stewart (knee) questionable for UConn. UConn beat Furman 82-71 R1. UCLA beat UCF 75-71.' },
-    { away:'TTU',  home:'ALA',  time:'9:45 PM ET', note:'Philon 29pts/8reb/7ast vs Hofstra. Petty 24pts vs Akron. Close matchup — TTU shoots 55% from 3.' },
-  ],
-  ncaab_finals: [
-    { away:'PUR(7)', home:'MIA',   score:{a:69,h:79}, note:'Purdue advances — Sweet 16 vs Texas' },
-    { away:'ISU(2)', home:'UK',    score:{a:82,h:63}, note:'Iowa State cruises — Lipsey stepped up w/ Jefferson out' },
-    { away:'SJU(5)', home:'KU',    score:{a:67,h:65}, note:'🚨 St. John\'s upsets Kansas! Sweet 16 vs Duke' },
-    { away:'TENN(6)',home:'UVA',   score:{a:79,h:72}, note:'Gillespie 21pts · 4th straight Sweet 16 for TENN' },
-  ]
+  nba_live:      [],
+  nba_upcoming:  [],
+  nba_finals:    [],
+  ncaab_live:    [],
+  ncaab_upcoming:[],
+  ncaab_finals:  []
 };
 
 // ═══════════════════════════════════════════════
-// ALERT STATE — seeded from verified live data
+// LIVE ALERT STATE — populated from ESPN API
 // ═══════════════════════════════════════════════
-let URGENT = [
-  { p:'urgent', game:'Iowa @ Florida (NCAAB)', score:'IOWA 66 – FLA 65 · 3:25 left · LIVE', src:'Yahoo Sports',
-    title:'Iowa Live ML — Upset Happening Now', sub:'9-seed Iowa leads #1 Florida with 3:25 left',
-    odds:'+350', edge:'+14.8%', conf:77, window:'closing', isNew:true,
-    why:'Iowa leads #1-seed Florida 66-65 with 3 minutes left — verified by Yahoo Sports live score. Pre-game Iowa was +450. Bennett Stirtz is active after a slow R1 game. Live ML window: the line is currently +350 and will collapse if Iowa maintains this lead another 90 seconds. Most urgent bet on the board right now.' },
-  { p:'urgent', game:'Arizona @ Utah State (NCAAB)', score:'IN PROGRESS · tipped 7:50 PM ET', src:'ESPN',
-    title:'Utah State Live ML — Upset Watch', sub:'USU pulled off a miracle vs Villanova — AZ -11.5 may be soft',
-    odds:'+520', edge:'+11.2%', conf:65, window:'open', isNew:true,
-    why:'Utah State beat Villanova by 10 in R1 (pre-game +7). On a revenge tour over their seeding. Arizona is 85% KenPom favorite but USU\'s Collins/Falslev combo is real. If USU stays within 8 at halftime, the live ML will have massive value. Monitor — worth placing if AZ isn\'t dominating early.' },
-];
+let URGENT = [];
 
-let HIGH = [
-  { p:'high', game:'BOS vs MIN (NBA)', score:'7:00 PM ET · NOT YET STARTED', src:'CBS Sports',
-    title:'Jaylen Brown Over 28.5 pts', sub:'Brown on 3-game 30pt streak · MIN missing Edwards + Reid',
-    odds:'+105', edge:'+9.3%', conf:83, window:'open', isNew:true,
-    why:'Brown has scored 30+ in 3 straight games (30, 32, 30). Anthony Edwards (knee inflammation) and Naz Reid (ankle) are both OUT for Minnesota. BOS is a 78% win probability favorite at home. When Brown has a clear lane without elite perimeter defenders, he takes over. +105 on Over 28.5 is strong pre-game value before tip at 7PM ET.' },
-  { p:'high', game:'NYK vs WAS (NBA)', score:'7:30 PM ET · NOT YET STARTED', src:'AP/CBS Sports',
-    title:'Brunson Over 25.5 pts + NYK -18.5 ATS', sub:'WAS 15-game skid · Brunson 26.2 PPG avg',
-    odds:'+118', edge:'+8.1%', conf:79, window:'open', isNew:false,
-    why:'Jalen Brunson averaging 26.2 PPG. Washington has lost 15 straight, is short-handed. NYK is 22-0 when holding opponents under 102 pts. Brunson Over 25.5 at +118 is value, especially with WAS allowing 123.7 PPG.' },
-  { p:'value', game:'TOR @ PHX (NBA)', score:'8:00 PM ET · NOT YET STARTED', src:'ESPN',
-    title:'Devin Booker Over 5.5 assists', sub:'PHX slight underdog — Booker plays-to-assist when behind',
-    odds:'+121', edge:'+7.1%', conf:76, window:'open', isNew:false,
-    why:'TOR is 61.3% favorite per our feed. If PHX falls behind, Booker shifts into a pass-first playmaker role. He\'s projected 5.9 assists tonight. The +121 line prices him at 45% — our model says 52%.' },
-  { p:'value', game:'Iowa @ Florida (NCAAB)', score:'IOWA 66 FLA 65 · 3:25 left', src:'Yahoo Sports',
-    title:'Iowa cover live ATS (if offered)', sub:'Iowa already covering pre-game +10 spread',
-    odds:'+175', edge:'+8.5%', conf:72, window:'closing', isNew:true,
-    why:'Iowa was +10 pre-game. They\'re up 1 with 3 min left — already covering the spread. If your book offers a live spread or game-winner prop on Iowa, it\'s live value. The 9-seed is playing the best game of their tournament life.' },
-];
+let HIGH = [];
 
-let TRENDING = [
-  { league:'NCAAB', name:'Iowa Live ML',       bet:'Live ML',     odds:'+350', vol:94, move:'Dropped from +450',  mDir:'up',   hot:true,  fire:true,  note:'Iowa leads FLA 66-65 with 3:25 left. Verified Yahoo Sports.' },
-  { league:'NCAAB', name:'SJU advances',       bet:'Sweet 16 ML', odds:'+160', vol:82, move:'New odds posted',    mDir:'up',   hot:true,  fire:false, note:'SJU beat KU 67-65 — now faces Duke. Pitino vs Scheyer.' },
-  { league:'NBA',   name:'Jaylen Brown O28.5', bet:'Points prop', odds:'+105', vol:74, move:'Opened +115',        mDir:'up',   hot:false, fire:false, note:'3-straight 30pt games. MIN missing Edwards + Reid.' },
-  { league:'NCAAB', name:'USU Live ML',        bet:'Live ML',     odds:'+520', vol:68, move:'Watch this game',    mDir:'up',   hot:true,  fire:false, note:'AZ vs USU in progress. USU beat Villanova R1.' },
-  { league:'NBA',   name:'NYK -18.5 ATS',      bet:'Spread',      odds:'-110', vol:65, move:'Heavy NYK action',   mDir:'down', hot:false, fire:false, note:'WAS 15-game skid. NYK 7:30 ET.' },
-  { league:'NCAAB', name:'UConn vs UCLA',      bet:'UConn ML',    odds:'-180', vol:61, move:'Stewart questionable',mDir:'up',  hot:false, fire:false, note:'8:45 ET. Stewart knee — if he plays, UConn strong.' },
-  { league:'NCAAB', name:'ALA -4 ATS',         bet:'Spread',      odds:'-110', vol:57, move:'Steam on ALA',       mDir:'down', hot:false, fire:false, note:'9:45 ET. Philon 29pts R1. Fastest KenPom team left.' },
-  { league:'NBA',   name:'BOS ML',             bet:'Moneyline',   odds:'-400', vol:51, move:'Moved from -350',    mDir:'down', hot:false, fire:false, note:'7 ET. Edwards out. BOS 4-game win streak.' },
-];
+let TRENDING = [];
 
-let UPCOMING = [
-  { league:'NBA',   game:'BOS vs MIN',    time:'7:00 PM ET', bet:'Jaylen Brown Over 28.5 pts',   note:'3-game 30pt streak. Edwards/Reid out for MIN.',       odds:'+105' },
-  { league:'NBA',   game:'NYK vs WAS',    time:'7:30 PM ET', bet:'Brunson Over 25.5 pts',         note:'Brunson 26.2 PPG avg. WAS 15-game skid.',             odds:'+118' },
-  { league:'NCAAB', game:'UConn vs UCLA', time:'8:45 PM ET', bet:'UConn 1H spread -4.5',          note:'Reed Jr. 31/27 R1. Stewart questionable — watch news.',odds:'-108' },
-  { league:'NCAAB', game:'ALA vs TTU',    time:'9:45 PM ET', bet:'Alabama -4 ATS',                note:'Fastest KenPom team. Philon 22 PPG. Petty dangerous.',odds:'-110' },
-  { league:'NBA',   game:'TOR @ PHX',     time:'8:00 PM ET', bet:'Booker Over 5.5 ast',           note:'PHX underdog — Booker passes more when behind.',      odds:'+121' },
-  { league:'NBA',   game:'BOS vs MIN',    time:'7:00 PM ET', bet:'Derrick White Over 1.5 blk',    note:'Edwards out = MIN drives heavy. White 1.8 blk/g avg.',odds:'+178' },
-];
+let UPCOMING = [];
 
 // ═══════════════════════════════════════════════
 // VALUE PICKS
 // ═══════════════════════════════════════════════
-const VP = [
-  { league:'NCAAB', fire:true,  name:'Iowa Live ML',        bet:'Live upset ML',     odds:'+350', edge:14.8, conf:77, color:'var(--ncaa)', note:'Iowa leads FLA 66-65 with 3:25 left. Verified Yahoo Sports. Act NOW.' },
-  { league:'NCAAB', fire:true,  name:'Jeremy Fears Jr.',    bet:'Over 7.5 assists',  odds:'+142', edge:12.5, conf:85, color:'var(--ncaa)', note:'11 ast R1 · 16 ast R2. First Big Ten player ever with 10+ ast in first 2 tourney games.' },
-  { league:'NBA',   fire:true,  name:'Derrick White',       bet:'Over 1.5 blocks',   odds:'+178', edge:12.8, conf:85, color:'var(--green)', note:'Model: 48.8% prob. Edwards/Reid both out — MIN drives will be heavy. BOS 7PM.' },
-  { league:'NCAAB', fire:true,  name:'Cameron Boozer',      bet:'Over 20.5 pts+reb', odds:'+115', edge:13.2, conf:88, color:'var(--ncaa)', note:'DD every tourney game. KenPom #1 ever. Duke Sweet 16 Fri vs SJU.' },
-  { league:'NBA',   fire:false, name:'Jaylen Brown',        bet:'Over 28.5 pts',     odds:'+105', edge:9.3,  conf:83, color:'var(--green)', note:'3-straight 30pt games. MIN missing Edwards + Reid. BOS 7PM ET.' },
-  { league:'NCAAB', fire:false, name:'Duke ML (Sweet 16)',  bet:'Moneyline Fri',     odds:'-260', edge:9.4,  conf:82, color:'var(--ncaa)', note:'34-2. Boozer is KenPom all-time best. Now plays SJU who shocked KU.' },
-  { league:'NFL',   fire:false, name:'Denver Broncos',      bet:'Win AFC (futures)', odds:'+180', edge:9.4,  conf:77, color:'var(--green)', note:'14-3 AFC #1 seed. Bo Nix breakout year.' },
-  { league:'NCAAB', fire:false, name:'Michigan Championship',bet:'Futures',          odds:'+340', edge:8.2,  conf:74, color:'var(--ncaa)', note:'#1 odds board. 87.3 PPG. Beat Brown earlier this year.' },
-  { league:'NBA',   fire:false, name:'Brunson Over 25.5',   bet:'Points prop',       odds:'+118', edge:8.1,  conf:79, color:'var(--amber)', note:'26.2 PPG avg. WAS 15-game losing streak. NYK 7:30PM ET.' },
-];
+let VP = [];
 
-const NCAA_PLAYERS = [
-  { name:'Cameron Boozer', school:'Duke', yr:'Fr', pos:'PF', seed:'#1 East', initials:'CB', avBg:'rgba(0,114,195,.18)', avC:'#3a8fd4', form:'🔥 Dominant', fBg:'rgba(232,57,138,.12)', fC:'var(--ncaa)',
-    stats:[{l:'PPG',v:'22.5'},{l:'RPG',v:'10.3'},{l:'APG',v:'4.2'},{l:'FG%',v:'56%'}],
-    games:[{o:'vs Siena R1',p:22,r:13,a:2,res:'W'},{o:'vs TCU R2',p:19,r:11,a:4,res:'W'},{o:'ACC Final',p:28,r:12,a:5,res:'W'}],
-    analysis:'KenPom highest-ever rating (3.253). Double-double in every tourney game. Explodes in 2H after quiet starts. Caleb Foster out; Ngongba II returned vs TCU. Duke faces SJU (who just beat Kansas 67-65!) in the Sweet 16 Friday.',
-    props:[{bet:'Over 20.5 pts+reb',odds:'+115',conf:88,rsn:'DD every tourney game.',color:'var(--ncaa)'},{bet:'Double-double Yes',odds:'-145',conf:85,rsn:'21 DDs this season — 100% tourney hit rate.',color:'var(--ncaa)'}] },
-  { name:'Jeremy Fears Jr.', school:'Michigan State', yr:'So', pos:'PG', seed:'#3', initials:'JF', avBg:'rgba(24,108,55,.2)', avC:'#27ae60', form:'👁️ Historic', fBg:'rgba(0,214,143,.1)', fC:'var(--green)',
-    stats:[{l:'APG',v:'9.2'},{l:'PPG',v:'12.1'},{l:'SPG',v:'1.8'},{l:'AST%',v:'42%'}],
-    games:[{o:'vs NDSU R1',p:12,r:3,a:11,res:'W'},{o:'vs LOU R2',p:12,r:4,a:16,res:'W'},{o:'B1G SF',p:15,r:5,a:12,res:'W'}],
-    analysis:"Nation's assists leader at 9.2/g. First Big Ten player ever with 10+ ast in each of first 2 NCAA tourney games. 27 combined ast / 2 TO in tournament. MSU plays UConn/UCLA winner in Sweet 16 Friday.",
-    props:[{bet:'Over 7.5 assists',odds:'+142',conf:85,rsn:'11 → 16 ast in tourney — way above line.',color:'var(--green)'},{bet:'Over 1.5 steals',odds:'+155',conf:74,rsn:'1.8 spg season avg. Elite defensive playmaker.',color:'var(--amber)'}] },
-];
+const NCAA_PLAYERS = [];
 
-const NCAAB_PICKS = [
-  { league:'NCAAB', fire:true,  name:'Iowa Live ML (+350)',      bet:'Live upset ML', odds:'+350', edge:14.8, conf:77, color:'var(--ncaa)', note:'Iowa leads FLA 66-65 · 3:25 left · Yahoo Sports verified. ACT NOW.' },
-  { league:'NCAAB', fire:true,  name:'Fears Jr. Over 7.5 ast',   bet:'Player prop',  odds:'+142', edge:12.5, conf:85, color:'var(--ncaa)', note:'First Big Ten player ever 10+ ast in first 2 tourney games.' },
-  { league:'NCAAB', fire:true,  name:'Boozer Over 20.5 pts+reb', bet:'Combo prop',   odds:'+115', edge:13.2, conf:88, color:'var(--ncaa)', note:'DD every tourney game. Sweet 16 vs SJU Fri.' },
-  { league:'NCAAB', fire:false, name:'Duke ML Sweet 16',          bet:'Moneyline',    odds:'-260', edge:9.4,  conf:82, color:'var(--ncaa)', note:'34-2. KenPom #1. Faces SJU who beat KU 67-65.' },
-  { league:'NCAAB', fire:false, name:'Michigan Championship',     bet:'Futures +340', odds:'+340', edge:8.2,  conf:74, color:'var(--ncaa)', note:'#1 odds board. Beat BOS earlier. 87.3 PPG.' },
-];
+const NCAAB_PICKS = [];
 
-const NBA_GAMES = [
-  { away:'WAS', home:'NYK', status:'UPCOMING', time:'7:30 PM ET', ap:4,  hp:96, spread:'NYK -18+', ou:'219',   val:true,  note:'WAS 15-game skid. Brunson 26.2 PPG. Champagnie status unclear.' },
-  { away:'MIN', home:'BOS', status:'UPCOMING', time:'7:00 PM ET', ap:22, hp:78, spread:'BOS -9.5', ou:'219.5', val:true,  note:'Edwards + Reid OUT for MIN. Brown 3-game 30pt streak. Vucevic out too.' },
-  { away:'TOR', home:'PHX', status:'UPCOMING', time:'8:00 PM ET', ap:61, hp:39, spread:'TOR -2.5', ou:'227',   val:false, note:'TOR 61.3% fav per model. Booker assist prop value.' },
-];
+const NBA_GAMES = [];
 
 const NFL_F = [
   { team:'Denver Broncos',    rec:'14-3',   type:'Super Bowl winner',         odds:'+600', edge:'High',   conf:80, color:'var(--green)', note:'AFC #1 seed. Bo Nix breakout. Strong cap position.' },
@@ -679,27 +588,11 @@ const NFL_ST = {
   'NFC Top 7': [{r:1,t:'Seattle Seahawks',rc:'14-3',c:'c'},{r:2,t:'Chicago Bears',rc:'11-6',c:'d'},{r:3,t:'Philadelphia Eagles',rc:'11-6',c:'d'},{r:4,t:'Carolina Panthers',rc:'8-9',c:'d'},{r:5,t:'LA Rams',rc:'12-5',c:'w'},{r:6,t:'SF 49ers',rc:'12-5',c:'w'},{r:7,t:'Green Bay Packers',rc:'9-7',c:'w'}],
 };
 
-const HOT_P = [{
-  name:'Jaylen Brown', team:'Boston Celtics', pos:'SG/SF', initials:'JB', avBg:'rgba(0,214,143,.15)', avC:'var(--green)', form:'🔥 On Fire', fBg:'rgba(0,214,143,.12)', fC:'var(--green)',
-  stats:[{l:'PPG',v:'28.5'},{l:'RPG',v:'6.1'},{l:'APG',v:'4.5'},{l:'FG%',v:'48%'}],
-  games:[{o:'vs MEM',p:30,r:6,a:6,b:1,res:'W'},{o:'vs MEM (prev)',p:32,r:7,a:4,b:0,res:'W'},{o:'vs CLE',p:30,r:5,a:5,b:1,res:'W'}],
-  analysis:'Brown is on a 3-game streak of 30+ points and ranks 5th in NBA scoring at 28.5 PPG. Tonight vs MIN (7PM ET, TD Garden) with Anthony Edwards (knee) and Naz Reid (ankle) both out. BOS is 78% favorite. When Brown has no elite perimeter defender, he dominates — tonight is prime.',
-  props:[{bet:'Over 28.5 pts',odds:'+105',conf:83,rsn:'3-straight 30pt games. MIN missing Edwards + Reid.',color:'var(--green)'},{bet:'Over 1.5 steals',odds:'+194',conf:78,rsn:'MIN shorthanded — drives create deflection opportunities.',color:'var(--amber)'}]
-}];
+const HOT_P = [];
 
-const FINAL_FOUR = [
-  { name:'Michigan', region:'Midwest', odds:'+340', conf:70, color:'var(--green)',  note:'#1 on every book. 87.3 PPG, 50.7% FG. Only 1 loss. Lendeborg dominant.',              path:'Wins Midwest → Beats West champ → Championship' },
-  { name:'Arizona',  region:'West',    odds:'+350', conf:68, color:'var(--purple)', note:'9-game win streak. AZ vs USU live now. Should advance.',                               path:'Tonight vs USU → Purdue/Texas → Elite 8 → FF' },
-  { name:'Duke',     region:'East',    odds:'+425', conf:65, color:'var(--blue)',   note:'34-2, Boozer KenPom #1 ever. Now faces SJU (who beat KU!) in Sweet 16.',               path:'Fri vs SJU → Elite 8 → Final Four' },
-  { name:'Houston',  region:'South',   odds:'+1100',conf:58, color:'var(--amber)',  note:'7th straight Sweet 16. Flemings 18pts. Best defense by efficiency.',                   path:'Beats Illinois → Beats Nebraska or Florida → FF' },
-];
-const CHAMP = { name:'Michigan Wolverines', odds:'+340', conf:62 };
-const UPSETS = [
-  { label:'🚨 Happening NOW',   match:'Iowa leads #1 Florida 66-65 · 3:25 left', note:'Bennett Stirtz active after slow R1. Iowa covering +10 spread. Pre-game Iowa +450.', ml:'Iowa ML now: +350' },
-  { label:'🚨 Confirmed',       match:'#5 SJU 67 def #4 Kansas 65',              note:"Pitino's St. John's shocks Darryn Peterson and KU. SJU plays Duke Friday.",         ml:'SJU Sweet 16 vs Duke: +900' },
-  { label:'⚠️ Watch',           match:'Utah State vs Arizona — LIVE NOW',         note:'USU beat Villanova by 10 in R1. Collins/Falslev backcourt is legit. AZ -11.5.',   ml:'USU ML: +520' },
-  { label:'⚠️ Sweet 16 watch',  match:'#11 Texas vs #2 Purdue (Thu)',             note:'Texas already shocked Gonzaga 74-68. Purdue won comfortably but faces hot Texas.', ml:'TEX Sweet 16 ML: +280' },
-];
+const FINAL_FOUR = [];
+const CHAMP = { name:'2025-26 NCAA Champion', odds:'—', conf:0 };
+const UPSETS = [];
 
 // ═══════════════════════════════════════════════
 // DOM ELEMENT CACHE — populated in init()
@@ -938,128 +831,175 @@ function renderLiveAll() {
 }
 
 // ═══════════════════════════════════════════════
-// AI REFRESH — searches web for real current scores
+// ESPN LIVE FETCH — no API key needed
 // ═══════════════════════════════════════════════
 let isRefreshing = false;
 
+function fmtGameTime(dateStr) {
+  try {
+    return new Date(dateStr).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZoneName:'short' });
+  } catch(e) { return '—'; }
+}
+
+function buildAlertsFromState() {
+  URGENT = [];
+  HIGH   = [];
+  TRENDING = [];
+  VP = [];
+
+  // NBA live games → urgent alerts
+  GAME_STATE.nba_live.forEach(g => {
+    const aScore = g.score[g.away] || 0;
+    const hScore = g.score[g.home] || 0;
+    const diff   = Math.abs(aScore - hScore);
+    const leader = aScore > hScore ? g.away : g.home;
+    if (diff <= 5) {
+      URGENT.push({ p:'urgent', game:`${g.away} @ ${g.home} (NBA)`,
+        score:`${g.away} ${aScore} – ${g.home} ${hScore} · ${g.clock}`,
+        src:'ESPN', title:`${g.away} vs ${g.home} — Close game`,
+        sub:`${diff}-point game in ${g.clock}`, odds:'LIVE', edge:'+8%', conf:74, window:'open', isNew:true,
+        why:`${leader} leads by ${diff} — close game with live betting opportunity. Check your book for live spread or ML.` });
+    } else {
+      HIGH.push({ p:'high', game:`${g.away} @ ${g.home} (NBA)`,
+        score:`${g.away} ${aScore} – ${g.home} ${hScore} · ${g.clock}`,
+        src:'ESPN', title:`${leader} covering spread`, sub:`Up ${diff} pts — ${g.clock}`,
+        odds:'LIVE', edge:'+6%', conf:70, window:'open', isNew:true,
+        why:`${leader} leads by ${diff} points. Check live spread value.` });
+    }
+    TRENDING.push({ league:'NBA', name:`${g.away} vs ${g.home}`, bet:'Live game',
+      odds:'LIVE', vol:80, move:'In progress', mDir:'up', hot:diff<=6, fire:diff<=3,
+      note:`${g.away} ${aScore} – ${g.home} ${hScore} · ${g.clock} · ESPN` });
+  });
+
+  // NBA upcoming → high alerts
+  GAME_STATE.nba_upcoming.forEach(g => {
+    HIGH.push({ p:'high', game:`${g.away} @ ${g.home} (NBA)`,
+      score:`${g.time}`, src:'ESPN', title:`${g.away} vs ${g.home} tonight`,
+      sub:`Tip: ${g.time}`, odds:'—', edge:'+5%', conf:65, window:'open', isNew:false,
+      why:`Tonight's matchup. Check your book for pre-game value.` });
+    TRENDING.push({ league:'NBA', name:`${g.away} @ ${g.home}`, bet:'Pre-game',
+      odds:'—', vol:60, move:'On schedule', mDir:'up', hot:false, fire:false,
+      note:`Tip ${g.time} · ESPN` });
+    VP.push({ league:'NBA', fire:false, name:`${g.away} @ ${g.home}`,
+      bet:'Check pre-game lines', odds:'—', edge:5, conf:65, color:'var(--green)',
+      note:`Tip: ${g.time}. Monitor injury reports before tip.` });
+  });
+
+  // NCAAB live
+  GAME_STATE.ncaab_live.forEach(g => {
+    const aScore = g.score[g.away] || 0;
+    const hScore = g.score[g.home] || 0;
+    const diff   = Math.abs(aScore - hScore);
+    URGENT.push({ p:'urgent', game:`${g.away} @ ${g.home} (NCAAB)`,
+      score:`${g.away} ${aScore} – ${g.home} ${hScore} · ${g.clock}`,
+      src:g.src||'ESPN', title:`${g.away} vs ${g.home} — LIVE`,
+      sub:`${g.clock} · ${diff <= 5 ? 'Close game' : `${Math.max(aScore,hScore)>Math.min(aScore,hScore) ? (aScore>hScore?g.away:g.home)+' leads' : 'tied'}`}`,
+      odds:'LIVE', edge:'+9%', conf:72, window:'open', isNew:true,
+      why:`Live NCAAB action. ${g.note || 'Check for live betting opportunities.'}`});
+  });
+}
+
 async function doRefresh() {
   if (isRefreshing) return;
-  if (!API_KEY) { updLiveTs(); return; }
   isRefreshing = true;
 
-  if (DOM.sspin)   DOM.sspin.classList.add('on');
-  if (DOM.lupdspin)DOM.lupdspin.classList.add('on');
-  if (DOM.scanBtn) DOM.scanBtn.disabled = true;
+  if (DOM.sspin)    DOM.sspin.classList.add('on');
+  if (DOM.lupdspin) DOM.lupdspin.classList.add('on');
+  if (DOM.scanBtn)  DOM.scanBtn.disabled = true;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: apiHeaders(),
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 1200,
-        tools: [{ type:'web_search_20250305', name:'web_search' }],
-        system: `You are a live sports betting intelligence system. Today is Sunday March 22, 2026, approximately 8-9 PM CDT.
+    const today = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
 
-CRITICAL: Use web_search to look up CURRENT live scores for these games right now:
-1. Search "Florida Iowa score live 2026"
-2. Search "Arizona Utah State score live 2026"
-3. Search "UConn UCLA score live March 22 2026"
-4. Search "Alabama Texas Tech score March 22 2026"
-5. Search "New York Knicks Washington Wizards score live"
-6. Search "Boston Celtics Minnesota Timberwolves score live"
+    const [nbaRes, ncaabRes] = await Promise.all([
+      fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard'),
+      fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard')
+    ]);
 
-After searching, return ONLY compact valid JSON (no markdown):
-{
-  "live_games": [
-    {"id":"fla-iowa","away":"IOWA","home":"FLA","score_away":0,"score_home":0,"clock":"X:XX","status":"live|final|upcoming","note":"key context","src":"source name"},
-    {"id":"ariz-usu","away":"USU","home":"ARIZ","score_away":0,"score_home":0,"clock":"X:XX","status":"live|final|upcoming","note":"key context","src":"source name"},
-    {"id":"conn-ucla","away":"UCLA","home":"CONN","score_away":0,"score_home":0,"clock":"X:XX","status":"live|final|upcoming","note":"key context","src":"source"},
-    {"id":"ala-ttu","away":"TTU","home":"ALA","score_away":0,"score_home":0,"clock":"X:XX","status":"live|final|upcoming","note":"key context","src":"source"},
-    {"id":"was-nyk","away":"WAS","home":"NYK","score_away":0,"score_home":0,"clock":"X:XX","status":"live|final|upcoming","note":"key context","src":"source"},
-    {"id":"min-bos","away":"MIN","home":"BOS","score_away":0,"score_home":0,"clock":"X:XX","status":"live|final|upcoming","note":"key context","src":"source"}
-  ],
-  "new_urgent_bets": [{"p":"urgent","game":"GAME (LEAGUE)","score":"SCORE · CLOCK","src":"verified source","title":"BET NAME","sub":"one line","odds":"+XXX","edge":"+X.X%","conf":80,"window":"closing|open","isNew":true,"why":"2-sentence reasoning"}],
-  "new_high_bets": [{"p":"high","game":"GAME","score":"SCORE · CLOCK","src":"source","title":"BET","sub":"line","odds":"+XXX","edge":"+X.X%","conf":75,"window":"open","isNew":true,"why":"reasoning"}],
-  "trending_update": {"name":"bet name","mDir":"up|down","move":"description","note":"why","vol":80},
-  "breaking": "1 sentence breaking news OR empty string"
-}`,
-        messages: [{ role:'user', content:'Search for the live scores of all these games right now and generate fresh betting alerts based on verified real-time scores. Date: March 22, 2026 evening CDT.' }]
-      })
-    });
+    const nbaData   = await nbaRes.json();
+    const ncaabData = await ncaabRes.json();
 
-    const data = await res.json();
-    let jsonText = '';
-    if (data.content) {
-      for (const block of data.content) {
-        if (block.type === 'text') jsonText += block.text;
+    // Reset state
+    GAME_STATE.nba_live     = [];
+    GAME_STATE.nba_upcoming = [];
+    GAME_STATE.nba_finals   = [];
+    GAME_STATE.ncaab_live   = [];
+    GAME_STATE.ncaab_upcoming = [];
+    GAME_STATE.ncaab_finals  = [];
+
+    // Parse NBA
+    for (const ev of (nbaData.events || [])) {
+      const comp   = ev.competitions[0];
+      const status = comp.status.type;
+      const home   = comp.competitors.find(t => t.homeAway === 'home');
+      const away   = comp.competitors.find(t => t.homeAway === 'away');
+      const ha = home.team.abbreviation;
+      const aa = away.team.abbreviation;
+      const hs = parseInt(home.score || 0);
+      const as_ = parseInt(away.score || 0);
+      const clock  = comp.status.displayClock;
+      const period = comp.status.period;
+
+      if (status.completed) {
+        GAME_STATE.nba_finals.push({ away:aa, home:ha, score:{[aa]:as_,[ha]:hs},
+          note:`Final · ${aa} ${as_} ${ha} ${hs}` });
+      } else if (status.name === 'STATUS_IN_PROGRESS') {
+        GAME_STATE.nba_live.push({ id:ev.id, away:aa, home:ha,
+          score:{[aa]:as_,[ha]:hs}, clock:`Q${period} ${clock}`, note:'', src:'ESPN' });
+      } else {
+        GAME_STATE.nba_upcoming.push({ id:ev.id, away:aa, home:ha,
+          time:fmtGameTime(comp.date), note:'', val:false });
       }
     }
 
-    const u = parseJSON(jsonText);
+    // Parse NCAAB
+    for (const ev of (ncaabData.events || [])) {
+      const comp   = ev.competitions[0];
+      const status = comp.status.type;
+      const home   = comp.competitors.find(t => t.homeAway === 'home');
+      const away   = comp.competitors.find(t => t.homeAway === 'away');
+      const ha  = home.team.abbreviation;
+      const aa  = away.team.abbreviation;
+      const hs  = parseInt(home.score || 0);
+      const as_ = parseInt(away.score || 0);
+      const clock  = comp.status.displayClock;
+      const period = comp.status.period;
+      const note   = (ev.competitions[0].notes || []).map(n => n.headline).join(' ') || '';
 
-    if (u.live_games) {
-      u.live_games.forEach(g => {
-        // Update NCAAB live
-        const nc = GAME_STATE.ncaab_live.find(x => x.id === g.id);
-        if (nc) {
-          if (g.score_away != null) nc.score[g.away] = g.score_away;
-          if (g.score_home != null) nc.score[g.home] = g.score_home;
-          if (g.clock) nc.clock = g.clock;
-          if (g.note)  nc.note  = g.note;
-          if (g.src)   nc.src   = g.src;
-          if (g.status === 'final') {
-            GAME_STATE.ncaab_finals.unshift({ away:g.away, home:g.home, score:{a:g.score_away,h:g.score_home}, note:g.note || 'Final' });
-            GAME_STATE.ncaab_live = GAME_STATE.ncaab_live.filter(x => x !== nc);
-          }
-        }
-        // Update NBA upcoming → live/final
-        const nb = GAME_STATE.nba_upcoming.find(x => x.id === g.id);
-        if (nb) {
-          if (g.status === 'live') {
-            nb.status = 'LIVE';
-            nb.score  = { [nb.away]:g.score_away, [nb.home]:g.score_home };
-            nb.clock  = g.clock;
-            if (g.note) nb.note = g.note;
-          } else if (g.status === 'final') {
-            GAME_STATE.nba_finals.unshift({ away:nb.away, home:nb.home, score:{[nb.away]:g.score_away,[nb.home]:g.score_home}, note:g.note || '' });
-            GAME_STATE.nba_upcoming = GAME_STATE.nba_upcoming.filter(x => x !== nb);
-          }
-        }
-      });
-    }
-
-    if (u.new_urgent_bets && u.new_urgent_bets.length) {
-      URGENT = [...u.new_urgent_bets.slice(0, 3), ...URGENT.filter(b => !b.isNew).slice(0, 1)];
-    }
-    if (u.new_high_bets && u.new_high_bets.length) {
-      HIGH = [...u.new_high_bets.slice(0, 3), ...HIGH.filter(b => !b.isNew).slice(0, 1)];
-    }
-    if (u.trending_update) {
-      const key = (u.trending_update.name || '').toLowerCase().split(' ')[0];
-      const ex = TRENDING.find(t => t.name.toLowerCase().includes(key));
-      if (ex) Object.assign(ex, u.trending_update);
-    }
-    if (u.breaking && u.breaking.length > 3) {
-      if (DOM.breaking) {
-        DOM.breaking.textContent = '🚨 LIVE: ' + u.breaking;
-        DOM.breaking.style.display = 'block';
-        setTimeout(() => { if (DOM.breaking) DOM.breaking.style.display = 'none'; }, 30000);
+      if (status.completed) {
+        GAME_STATE.ncaab_finals.push({ away:aa, home:ha, score:{a:as_,h:hs},
+          note:`Final · ${note || ''}` });
+      } else if (status.name === 'STATUS_IN_PROGRESS') {
+        GAME_STATE.ncaab_live.push({ id:ev.id, away:aa, home:ha,
+          score:{[aa]:as_,[ha]:hs}, clock:`${period === 2 ? '2H' : '1H'} ${clock}`,
+          note, tag:'live', src:'ESPN' });
+      } else {
+        GAME_STATE.ncaab_upcoming.push({ away:aa, home:ha,
+          time:fmtGameTime(comp.date), note });
       }
+    }
+
+    // Build alerts from live state
+    buildAlertsFromState();
+
+    if (DOM.breaking && GAME_STATE.nba_live.length > 0) {
+      const g = GAME_STATE.nba_live[0];
+      DOM.breaking.textContent = `🔴 LIVE: ${g.away} ${g.score[g.away]} – ${g.home} ${g.score[g.home]} · ${g.clock} · ESPN`;
+      DOM.breaking.style.display = 'block';
     }
 
     renderLiveAll();
     renderNCAA();
     renderNBA();
+    updLiveTs();
 
   } catch (err) {
-    console.warn('Refresh error:', err);
+    console.warn('ESPN fetch error:', err);
     updLiveTs();
   }
 
-  if (DOM.sspin)   DOM.sspin.classList.remove('on');
-  if (DOM.lupdspin)DOM.lupdspin.classList.remove('on');
-  if (DOM.scanBtn) DOM.scanBtn.disabled = false;
+  if (DOM.sspin)    DOM.sspin.classList.remove('on');
+  if (DOM.lupdspin) DOM.lupdspin.classList.remove('on');
+  if (DOM.scanBtn)  DOM.scanBtn.disabled = false;
   isRefreshing = false;
 }
 
