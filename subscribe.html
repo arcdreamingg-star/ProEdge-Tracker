@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProEdge Tracker — Subscribe</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0f1e; color: #e8f0fe; font-family: -apple-system, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+  h1 { font-size: 2rem; color: #7eb8f7; margin-bottom: 8px; }
+  .tagline { color: #6a8aaa; margin-bottom: 48px; font-size: 1rem; }
+  .plans { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+  .plan { background: rgba(126,184,247,0.08); border: 1px solid rgba(126,184,247,0.2); border-radius: 16px; padding: 32px 28px; width: 260px; text-align: center; }
+  .plan.featured { border-color: #7eb8f7; background: rgba(126,184,247,0.14); }
+  .plan h2 { font-size: 1.2rem; margin-bottom: 8px; }
+  .plan .price { font-size: 2.5rem; font-weight: bold; color: #7eb8f7; margin: 16px 0 4px; }
+  .plan .price span { font-size: 1rem; color: #6a8aaa; }
+  .plan ul { list-style: none; margin: 20px 0 28px; text-align: left; }
+  .plan ul li { padding: 6px 0; color: #a8d8b0; font-size: 0.9rem; }
+  .plan ul li::before { content: "✓  "; }
+  .btn { display: inline-block; padding: 12px 28px; border-radius: 8px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 0.95rem; }
+  .btn-primary { background: #7eb8f7; color: #0a0f1e; }
+  .btn-outline { border: 1px solid #7eb8f7; color: #7eb8f7; }
+  .back { margin-top: 40px; color: #6a8aaa; font-size: 0.9rem; }
+  .back a { color: #7eb8f7; text-decoration: none; }
+</style>
+</head>
+<body>
+  <h1>ProEdge Tracker</h1>
+  <p class="tagline">Real-time scores · Betting alerts · Expert picks</p>
+  <div class="plans">
+    <div class="plan">
+      <h2>Free</h2>
+      <div class="price">$0 <span>/mo</span></div>
+      <ul>
+        <li>Live NBA scores</li>
+        <li>Top 3 daily picks</li>
+        <li>Basic alerts</li>
+      </ul>
+      <a href="index.html" class="btn btn-outline">Get Started</a>
+    </div>
+    <div class="plan featured">
+      <h2>Pro ⭐</h2>
+      <div class="price">$9 <span>/mo</span></div>
+      <ul>
+        <li>All sports (NBA · NFL · NCAAB)</li>
+        <li>Unlimited picks & alerts</li>
+        <li>Line movement tracker</li>
+        <li>Injury & weather flags</li>
+        <li>Priority email updates</li>
+      </ul>
+      <a href="#" class="btn btn-primary">Subscribe — $9/mo</a>
+    </div>
+    <div class="plan">
+      <h2>Annual</h2>
+      <div class="price">$79 <span>/yr</span></div>
+      <ul>
+        <li>Everything in Pro</li>
+        <li>Save $29 vs monthly</li>
+        <li>Early access to features</li>
+      </ul>
+      <a href="#" class="btn btn-outline">Subscribe — $79/yr</a>
+    </div>
+  </div>
+  <p class="back"><a href="index.html">← Back to dashboard</a></p>
+</body>
+</html>
